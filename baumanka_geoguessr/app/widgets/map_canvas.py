@@ -11,6 +11,38 @@ from app.paths import MAP_SIZE
 
 Marker = tuple[int, int, QColor | str, str]
 
+# Moscow metro line palette (Sokolnicheskaya red, Zamoskvoretskaya green)
+METRO_RED = "#E42313"
+METRO_GREEN = "#44B85C"
+METRO_LINE_COLOR = "#8B6B72"
+
+
+def _draw_metro_marker(painter: QPainter, x: int, y: int, color: QColor, label: str) -> None:
+    """Rounded station pin: white ring, fill, inner dot — like metro map markers."""
+    outer_r, inner_r, dot_r = 15, 10, 4
+    painter.setPen(QPen(QColor("white"), 5))
+    painter.setBrush(color)
+    painter.drawEllipse(QPoint(x, y), outer_r, outer_r)
+    painter.setPen(QPen(color.darker(115), 2))
+    painter.setBrush(QColor("white"))
+    painter.drawEllipse(QPoint(x, y), inner_r, inner_r)
+    painter.setBrush(color)
+    painter.setPen(Qt.NoPen)
+    painter.drawEllipse(QPoint(x, y), dot_r, dot_r)
+    if label:
+        font = painter.font()
+        font.setBold(True)
+        font.setPointSize(9)
+        painter.setFont(font)
+        metrics = painter.fontMetrics()
+        text_w = metrics.horizontalAdvance(label)
+        text_x = x - text_w // 2
+        text_y = y + outer_r + 18
+        painter.setPen(QPen(QColor("white"), 3))
+        painter.drawText(text_x, text_y, label)
+        painter.setPen(QPen(QColor("#4d2732")))
+        painter.drawText(text_x, text_y, label)
+
 
 class MapCanvas(QLabel):
     clicked = Signal(int, int)
@@ -69,22 +101,14 @@ class MapCanvas(QLabel):
         painter.setRenderHint(QPainter.Antialiasing)
 
         for x1, y1, x2, y2, color in self.lines:
-            pen = QPen(QColor(color), 4)
+            pen = QPen(QColor(color), 3)
             pen.setStyle(Qt.DashLine)
+            pen.setCapStyle(Qt.RoundCap)
             painter.setPen(pen)
             painter.drawLine(QPoint(x1, y1), QPoint(x2, y2))
 
         for x, y, color, label in self.markers:
-            qcolor = QColor(color)
-            painter.setPen(QPen(QColor("white"), 4))
-            painter.setBrush(qcolor)
-            painter.drawEllipse(QPoint(x, y), 11, 11)
-            painter.setPen(QPen(qcolor.darker(140), 3))
-            painter.setBrush(Qt.NoBrush)
-            painter.drawEllipse(QPoint(x, y), 16, 16)
-            if label:
-                painter.setPen(QPen(QColor("#4d2732"), 2))
-                painter.drawText(x + 18, y - 12, label)
+            _draw_metro_marker(painter, x, y, QColor(color), label)
 
         painter.end()
         self.setPixmap(pixmap)
@@ -94,8 +118,8 @@ def build_scaled_result_pixmap(
     map_path: str | Path,
     markers: Iterable[Marker],
     lines: Iterable[tuple[int, int, int, int, QColor | str]],
-    max_width: int = 560,
-    max_height: int = 360,
+    max_width: int = 1000,
+    max_height: int = 640,
 ) -> QPixmap:
     canvas = MapCanvas(clickable=False)
     canvas.load_map(map_path)

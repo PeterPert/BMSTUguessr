@@ -9,8 +9,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QFileDialog,
-    QFormLayout,
-    QGroupBox,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -18,7 +17,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSpinBox,
     QDoubleSpinBox,
-    QSplitter,
     QTabWidget,
     QTableWidget,
     QTableWidgetItem,
@@ -27,14 +25,35 @@ from PySide6.QtWidgets import (
 )
 
 from app import database, paths
+from app.widgets.map_canvas import METRO_RED
 from app.windows.map_dialogs import MapPickerDialog, ResultMapDialog
+
+
+def _editor_card(parent: QWidget | None = None) -> QWidget:
+    card = QWidget(parent)
+    card.setObjectName("EditorCard")
+    return card
+
+
+def _section_title(text: str) -> QLabel:
+    label = QLabel(text)
+    label.setObjectName("EditorSectionTitle")
+    return label
+
+
+def _status_label(text: str, ready: bool = False) -> QLabel:
+    label = QLabel(text)
+    label.setObjectName("EditorStatusOk" if ready else "EditorStatusPending")
+    label.setWordWrap(True)
+    return label
 
 
 class EditorWindow(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Редактор карт и меток")
-        self.setMinimumSize(1050, 720)
+        self.setMinimumSize(1180, 820)
+        self.resize(1240, 860)
         self.current_location_id: int | None = None
         self.selected_photo_path: str | None = None
         self.selected_map_path: str | None = None
@@ -45,30 +64,52 @@ class EditorWindow(QDialog):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
+        root.setContentsMargins(24, 20, 24, 20)
+        root.setSpacing(14)
+
+        header = QVBoxLayout()
+        header.setSpacing(4)
         title = QLabel("Редактор")
         title.setObjectName("TitleLabel")
-        subtitle = QLabel("Добавляйте этажи, фотографии и правильные точки без SQL-заклинаний.")
+        subtitle = QLabel("Этажи, фотографии и правильные точки — без SQL и путей к файлам в глаза.")
         subtitle.setObjectName("SubtitleLabel")
+        subtitle.setWordWrap(True)
+        header.addWidget(title)
+        header.addWidget(subtitle)
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._build_floors_tab(), "Этажи")
         self.tabs.addTab(self._build_locations_tab(), "Метки")
 
+        footer = QHBoxLayout()
+        footer.addStretch(1)
         close_button = QPushButton("Закрыть")
+        close_button.setMinimumWidth(140)
         close_button.clicked.connect(self.accept)
+        footer.addWidget(close_button)
 
-        root.addWidget(title)
-        root.addWidget(subtitle)
+        root.addLayout(header)
         root.addWidget(self.tabs, 1)
-        root.addWidget(close_button)
+        root.addLayout(footer)
 
     # ---------- Этажи ----------
     def _build_floors_tab(self) -> QWidget:
         tab = QWidget()
-        layout = QHBoxLayout(tab)
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(16)
 
-        form_group = QGroupBox("Добавить или изменить этаж")
-        form = QFormLayout(form_group)
+        card = _editor_card()
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(20, 18, 20, 18)
+        card_layout.setSpacing(14)
+        card_layout.addWidget(_section_title("Параметры этажа"))
+
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(12)
+        grid.setColumnStretch(1, 1)
+
         self.floor_number_spin = QSpinBox()
         self.floor_number_spin.setRange(1, 20)
         self.floor_number_spin.setValue(2)
@@ -77,25 +118,38 @@ class EditorWindow(QDialog):
         self.scale_spin.setRange(0.010, 2.000)
         self.scale_spin.setSingleStep(0.010)
         self.scale_spin.setValue(0.100)
-        self.map_label = QLabel("Схема не выбрана")
-        self.map_label.setWordWrap(True)
-        choose_map_button = QPushButton("Выбрать схему 1100×700")
-        save_floor_button = QPushButton("Сохранить этаж")
-        save_floor_button.setObjectName("SecondaryButton")
+        self.map_status_label = _status_label("Схема не выбрана")
 
-        form.addRow("Номер этажа:", self.floor_number_spin)
-        form.addRow("Метров на пиксель:", self.scale_spin)
-        form.addRow("Файл схемы:", self.map_label)
-        form.addRow(choose_map_button)
-        form.addRow(save_floor_button)
+        grid.addWidget(QLabel("Номер этажа"), 0, 0)
+        grid.addWidget(self.floor_number_spin, 0, 1)
+        grid.addWidget(QLabel("Метров на пиксель"), 1, 0)
+        grid.addWidget(self.scale_spin, 1, 1)
+        grid.addWidget(QLabel("Схема 1100×700"), 2, 0)
+        grid.addWidget(self.map_status_label, 2, 1)
+
+        floor_actions = QHBoxLayout()
+        floor_actions.setSpacing(10)
+        choose_map_button = QPushButton("Выбрать схему")
+        choose_map_button.setObjectName("SecondaryButton")
+        save_floor_button = QPushButton("Сохранить этаж")
+        floor_actions.addWidget(choose_map_button)
+        floor_actions.addWidget(save_floor_button)
+        floor_actions.addStretch(1)
+
+        card_layout.addLayout(grid)
+        card_layout.addLayout(floor_actions)
 
         self.floors_table = QTableWidget(0, 3)
-        self.floors_table.setHorizontalHeaderLabels(["Этаж", "М/пикс", "Схема"])
+        self.floors_table.setHorizontalHeaderLabels(["Этаж", "М/пикс", "Файл"])
         self.floors_table.horizontalHeader().setStretchLastSection(True)
         self.floors_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.floors_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.floors_table.setAlternatingRowColors(True)
+        self.floors_table.verticalHeader().setVisible(False)
+        self.floors_table.setShowGrid(False)
 
-        layout.addWidget(form_group, 0)
+        layout.addWidget(card)
+        layout.addWidget(_section_title("Сохранённые этажи"))
         layout.addWidget(self.floors_table, 1)
 
         choose_map_button.clicked.connect(self._choose_map)
@@ -124,7 +178,12 @@ class EditorWindow(QDialog):
             )
             return
         self.selected_map_path = file_path
-        self.map_label.setText(file_path)
+        self._set_map_status(file_path)
+
+    def _set_map_status(self, path: str) -> None:
+        name = Path(path).name
+        self.map_status_label.setText(f"✓ {name}")
+        self.map_status_label.setObjectName("EditorStatusOk")
 
     def _save_floor(self) -> None:
         if not self.selected_map_path:
@@ -150,7 +209,9 @@ class EditorWindow(QDialog):
         for row_index, row in enumerate(self.floors):
             self.floors_table.setItem(row_index, 0, QTableWidgetItem(str(row["floor_number"])))
             self.floors_table.setItem(row_index, 1, QTableWidgetItem(f"{row['meters_per_pixel']:.3f}"))
-            self.floors_table.setItem(row_index, 2, QTableWidgetItem(row["map_path"]))
+            self.floors_table.setItem(
+                row_index, 2, QTableWidgetItem(Path(row["map_path"]).name)
+            )
         self.floors_table.resizeColumnsToContents()
         self._refresh_floor_combo()
 
@@ -163,71 +224,92 @@ class EditorWindow(QDialog):
         self.floor_number_spin.setValue(int(item["floor_number"]))
         self.scale_spin.setValue(float(item["meters_per_pixel"]))
         self.selected_map_path = str(paths.resolve_path(item["map_path"]))
-        self.map_label.setText(item["map_path"])
+        self._set_map_status(item["map_path"])
 
     # ---------- Метки ----------
     def _build_locations_tab(self) -> QWidget:
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        splitter = QSplitter(Qt.Horizontal)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(16)
 
-        left = QWidget()
-        left_layout = QVBoxLayout(left)
-        form_group = QGroupBox("Карточка метки")
-        form = QFormLayout(form_group)
+        card = _editor_card()
+        card_layout = QHBoxLayout(card)
+        card_layout.setContentsMargins(20, 18, 20, 18)
+        card_layout.setSpacing(20)
+
+        self.preview_photo = QLabel()
+        self.preview_photo.setObjectName("EditorPreviewFrame")
+        self.preview_photo.setAlignment(Qt.AlignCenter)
+        self.preview_photo.setMinimumSize(300, 280)
+        self.preview_photo.setMaximumSize(340, 320)
+        self.preview_photo.setText("Предпросмотр")
+
+        form_column = QVBoxLayout()
+        form_column.setSpacing(12)
+        form_column.addWidget(_section_title("Карточка метки"))
 
         self.title_edit = QLineEdit()
         self.title_edit.setPlaceholderText("Например: переход у столовой")
-        self.photo_label = QLabel("Фото не выбрано")
-        self.photo_label.setWordWrap(True)
         self.floor_combo = QComboBox()
-        self.point_label = QLabel("Точка не поставлена")
+        self.photo_status_label = _status_label("Фото не выбрано")
+        self.point_status_label = _status_label("Точка не поставлена")
 
-        choose_photo_button = QPushButton("Выбрать фотографию")
+        fields = QGridLayout()
+        fields.setHorizontalSpacing(12)
+        fields.setVerticalSpacing(10)
+        fields.setColumnStretch(1, 1)
+        fields.addWidget(QLabel("Название"), 0, 0)
+        fields.addWidget(self.title_edit, 0, 1)
+        fields.addWidget(QLabel("Этаж"), 1, 0)
+        fields.addWidget(self.floor_combo, 1, 1)
+        fields.addWidget(QLabel("Фото"), 2, 0)
+        fields.addWidget(self.photo_status_label, 2, 1)
+        fields.addWidget(QLabel("Точка"), 3, 0)
+        fields.addWidget(self.point_status_label, 3, 1)
+        form_column.addLayout(fields)
+
+        pick_row = QHBoxLayout()
+        pick_row.setSpacing(8)
+        choose_photo_button = QPushButton("Фото")
         choose_photo_button.setObjectName("SecondaryButton")
-        set_point_button = QPushButton("Поставить точку на схеме")
-        preview_button = QPushButton("Проверить как раунд")
+        set_point_button = QPushButton("Точка на карте")
+        preview_button = QPushButton("Проверить")
         preview_button.setObjectName("SecondaryButton")
-        save_location_button = QPushButton("Сохранить метку")
-        new_location_button = QPushButton("Новая метка")
-        delete_location_button = QPushButton("Удалить выбранную")
+        pick_row.addWidget(choose_photo_button)
+        pick_row.addWidget(set_point_button)
+        pick_row.addWidget(preview_button)
+        form_column.addLayout(pick_row)
+
+        actions = QHBoxLayout()
+        actions.setSpacing(8)
+        save_location_button = QPushButton("Сохранить")
+        new_location_button = QPushButton("Новая")
+        new_location_button.setObjectName("SecondaryButton")
+        delete_location_button = QPushButton("Удалить")
         delete_location_button.setObjectName("SecondaryButton")
+        actions.addWidget(save_location_button)
+        actions.addWidget(new_location_button)
+        actions.addWidget(delete_location_button)
+        actions.addStretch(1)
+        form_column.addLayout(actions)
+        form_column.addStretch(1)
 
-        form.addRow("Название:", self.title_edit)
-        form.addRow("Фото:", self.photo_label)
-        form.addRow(choose_photo_button)
-        form.addRow("Этаж:", self.floor_combo)
-        form.addRow("Координаты:", self.point_label)
-        form.addRow(set_point_button)
-        form.addRow(preview_button)
+        card_layout.addWidget(self.preview_photo)
+        card_layout.addLayout(form_column, 1)
 
-        buttons = QHBoxLayout()
-        buttons.addWidget(save_location_button)
-        buttons.addWidget(new_location_button)
-        buttons.addWidget(delete_location_button)
-
-        self.preview_photo = QLabel("Предпросмотр фото")
-        self.preview_photo.setAlignment(Qt.AlignCenter)
-        self.preview_photo.setMinimumHeight(220)
-        self.preview_photo.setStyleSheet("background: white; border: 1px solid #e3c2ca; border-radius: 12px;")
-
-        left_layout.addWidget(form_group)
-        left_layout.addLayout(buttons)
-        left_layout.addWidget(self.preview_photo, 1)
-
-        right = QWidget()
-        right_layout = QVBoxLayout(right)
-        self.locations_table = QTableWidget(0, 6)
-        self.locations_table.setHorizontalHeaderLabels(["ID", "Название", "Этаж", "X", "Y", "Фото"])
+        self.locations_table = QTableWidget(0, 4)
+        self.locations_table.setHorizontalHeaderLabels(["ID", "Название", "Этаж", "Точка"])
         self.locations_table.horizontalHeader().setStretchLastSection(True)
         self.locations_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.locations_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        right_layout.addWidget(self.locations_table)
+        self.locations_table.setAlternatingRowColors(True)
+        self.locations_table.verticalHeader().setVisible(False)
+        self.locations_table.setShowGrid(False)
 
-        splitter.addWidget(left)
-        splitter.addWidget(right)
-        splitter.setSizes([420, 620])
-        layout.addWidget(splitter)
+        layout.addWidget(card)
+        layout.addWidget(_section_title("Все метки"))
+        layout.addWidget(self.locations_table, 1)
 
         choose_photo_button.clicked.connect(self._choose_photo)
         set_point_button.clicked.connect(self._set_location_point)
@@ -237,6 +319,22 @@ class EditorWindow(QDialog):
         delete_location_button.clicked.connect(self._delete_selected_location)
         self.locations_table.itemSelectionChanged.connect(self._load_selected_location_into_form)
         return tab
+
+    def _set_photo_status(self, path: str | None) -> None:
+        if path:
+            self.photo_status_label.setText(f"✓ {Path(path).name}")
+            self.photo_status_label.setObjectName("EditorStatusOk")
+        else:
+            self.photo_status_label.setText("Фото не выбрано")
+            self.photo_status_label.setObjectName("EditorStatusPending")
+
+    def _set_point_status(self, point: tuple[int, int] | None) -> None:
+        if point:
+            self.point_status_label.setText(f"✓ x={point[0]}, y={point[1]}")
+            self.point_status_label.setObjectName("EditorStatusOk")
+        else:
+            self.point_status_label.setText("Точка не поставлена")
+            self.point_status_label.setObjectName("EditorStatusPending")
 
     def _refresh_floor_combo(self) -> None:
         if not hasattr(self, "floor_combo"):
@@ -266,7 +364,7 @@ class EditorWindow(QDialog):
             QMessageBox.warning(self, "Фото", "Не получилось открыть изображение.")
             return
         self.selected_photo_path = file_path
-        self.photo_label.setText(file_path)
+        self._set_photo_status(file_path)
         self._show_photo_preview(file_path)
 
     def _set_location_point(self) -> None:
@@ -282,7 +380,7 @@ class EditorWindow(QDialog):
         dialog = MapPickerDialog(paths.resolve_path(floor["map_path"]), self, existing_marker=existing)
         if dialog.exec() == QDialog.Accepted and dialog.selected_point:
             self.selected_point = dialog.selected_point
-            self.point_label.setText(f"x={self.selected_point[0]}, y={self.selected_point[1]}")
+            self._set_point_status(self.selected_point)
 
     def _save_location(self) -> None:
         if not self.selected_photo_path:
@@ -314,19 +412,19 @@ class EditorWindow(QDialog):
             QMessageBox.critical(self, "Метка", f"Не удалось сохранить метку:\n{exc}")
             return
         QMessageBox.information(self, "Метка", "Метка сохранена.")
+        self._set_photo_status(self.selected_photo_path)
         self._load_locations()
 
     def _load_locations(self) -> None:
         self.locations = database.get_locations()
         self.locations_table.setRowCount(len(self.locations))
         for row_index, row in enumerate(self.locations):
+            point = f"{row['answer_x']}, {row['answer_y']}"
             values = [
                 row["id"],
                 row["title"] or "Без названия",
                 row["floor"],
-                row["answer_x"],
-                row["answer_y"],
-                row["image_path"],
+                point,
             ]
             for column, value in enumerate(values):
                 self.locations_table.setItem(row_index, column, QTableWidgetItem(str(value)))
@@ -341,12 +439,12 @@ class EditorWindow(QDialog):
         self.current_location_id = int(item["id"])
         self.title_edit.setText(item["title"] or "")
         self.selected_photo_path = item["image_path"]
-        self.photo_label.setText(item["image_path"])
+        self._set_photo_status(item["image_path"])
         index = self.floor_combo.findData(int(item["floor"]))
         if index >= 0:
             self.floor_combo.setCurrentIndex(index)
         self.selected_point = (int(item["answer_x"]), int(item["answer_y"]))
-        self.point_label.setText(f"x={self.selected_point[0]}, y={self.selected_point[1]}")
+        self._set_point_status(self.selected_point)
         self._show_photo_preview(paths.resolve_path(item["image_path"]))
 
     def _clear_location_form(self) -> None:
@@ -354,9 +452,9 @@ class EditorWindow(QDialog):
         self.selected_photo_path = None
         self.selected_point = None
         self.title_edit.clear()
-        self.photo_label.setText("Фото не выбрано")
-        self.point_label.setText("Точка не поставлена")
-        self.preview_photo.setText("Предпросмотр фото")
+        self._set_photo_status(None)
+        self._set_point_status(None)
+        self.preview_photo.setText("Предпросмотр")
         self.preview_photo.setPixmap(QPixmap())
         self.locations_table.clearSelection()
 
@@ -385,31 +483,46 @@ class EditorWindow(QDialog):
             QMessageBox.warning(self, "Проверка", "Этаж не найден.")
             return
         dialog = QDialog(self)
-        dialog.setWindowTitle("Проверка метки как раунда")
-        dialog.setMinimumSize(900, 620)
+        dialog.setWindowTitle("Проверка метки")
+        dialog.setMinimumSize(920, 640)
         layout = QHBoxLayout(dialog)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(20)
+
         photo = QLabel()
+        photo.setObjectName("EditorPreviewFrame")
         photo.setAlignment(Qt.AlignCenter)
-        photo.setStyleSheet("background: white; border: 1px solid #e3c2ca; border-radius: 12px;")
         pixmap = QPixmap(str(paths.resolve_path(self.selected_photo_path)))
         if not pixmap.isNull():
-            photo.setPixmap(pixmap.scaled(420, 520, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            photo.setPixmap(pixmap.scaled(440, 540, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:
             photo.setText("Фото не открылось")
-        map_button = QPushButton("Открыть карту с правильной точкой")
-        map_button.clicked.connect(lambda: ResultMapDialog(
-            paths.resolve_path(floor["map_path"]),
-            [(self.selected_point[0], self.selected_point[1], "#dd3344", "ответ")],
-            [],
-            dialog,
-        ).exec())
-        right = QVBoxLayout()
-        right.addWidget(QLabel(f"Этаж: {self.floor_combo.currentData()}"))
-        right.addWidget(QLabel(f"Координаты: x={self.selected_point[0]}, y={self.selected_point[1]}"))
-        right.addWidget(map_button)
-        right.addStretch(1)
-        layout.addWidget(photo, 1)
-        layout.addLayout(right)
+
+        info_card = _editor_card()
+        info_layout = QVBoxLayout(info_card)
+        info_layout.setContentsMargins(20, 20, 20, 20)
+        info_layout.setSpacing(12)
+        info_layout.addWidget(_section_title("Как в игре"))
+        title = self.title_edit.text().strip() or "Без названия"
+        info_layout.addWidget(QLabel(f"<b>{title}</b>"))
+        info_layout.addWidget(QLabel(f"Этаж: {self.floor_combo.currentData()}"))
+        info_layout.addWidget(
+            QLabel(f"Точка: x={self.selected_point[0]}, y={self.selected_point[1]}")
+        )
+        map_button = QPushButton("Карта с ответом")
+        map_button.clicked.connect(
+            lambda: ResultMapDialog(
+                paths.resolve_path(floor["map_path"]),
+                [(self.selected_point[0], self.selected_point[1], METRO_RED, "")],
+                [],
+                dialog,
+            ).exec()
+        )
+        info_layout.addWidget(map_button)
+        info_layout.addStretch(1)
+
+        layout.addWidget(photo, 2)
+        layout.addWidget(info_card, 1)
         dialog.exec()
 
     def _show_photo_preview(self, path: str | Path) -> None:
@@ -419,6 +532,9 @@ class EditorWindow(QDialog):
             self.preview_photo.setPixmap(QPixmap())
             return
         self.preview_photo.setText("")
+        frame = self.preview_photo.size()
+        target_w = max(260, frame.width() - 16)
+        target_h = max(240, frame.height() - 16)
         self.preview_photo.setPixmap(
-            pixmap.scaled(380, 260, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap.scaled(target_w, target_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         )

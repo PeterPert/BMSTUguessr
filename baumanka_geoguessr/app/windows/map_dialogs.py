@@ -6,7 +6,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QDialog, QVBoxLayout
 
-from app.widgets.map_canvas import MapCanvas, Marker
+from app.widgets.map_canvas import METRO_GREEN, MapCanvas, Marker
 
 
 class MapPickerDialog(QDialog):
@@ -22,7 +22,7 @@ class MapPickerDialog(QDialog):
         self.canvas = MapCanvas(clickable=True)
         self.canvas.load_map(map_path)
         if existing_marker is not None:
-            self.canvas.set_markers([(existing_marker[0], existing_marker[1], QColor("#2aa876"), "точка")])
+            self.canvas.set_markers([(existing_marker[0], existing_marker[1], QColor(METRO_GREEN), "")])
         layout.addWidget(self.canvas)
         self.canvas.clicked.connect(self._select_point)
 

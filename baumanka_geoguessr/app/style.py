@@ -67,4 +67,52 @@ QHeaderView::section {
     border: none;
     padding: 6px;
 }
+QTabWidget::pane {
+    border: 1px solid #e3c2ca;
+    border-radius: 14px;
+    background: #fffaf5;
+    top: -1px;
+    padding: 8px;
+}
+QTabBar::tab {
+    background: #f4d4de;
+    color: #633141;
+    border: 1px solid #e3c2ca;
+    border-bottom: none;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    padding: 10px 22px;
+    margin-right: 4px;
+    font-weight: 600;
+}
+QTabBar::tab:selected {
+    background: #fffaf5;
+    color: #9b3754;
+}
+QWidget#EditorCard {
+    background: #fff0f4;
+    border: 1px solid #e3c2ca;
+    border-radius: 16px;
+}
+QLabel#EditorSectionTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #9b3754;
+}
+QLabel#EditorStatusOk {
+    color: #2d7a52;
+    font-weight: 600;
+}
+QLabel#EditorStatusPending {
+    color: #7a5962;
+}
+QLabel#EditorPreviewFrame {
+    background: white;
+    border: 1px solid #e3c2ca;
+    border-radius: 14px;
+}
+QTableWidget::item:selected {
+    background: #f4d4de;
+    color: #3b2630;
+}
 """

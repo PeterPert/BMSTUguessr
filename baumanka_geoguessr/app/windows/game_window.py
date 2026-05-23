@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from app import database, paths
 from app.scoring import calculate_distance_meters, points_for_distance
-from app.widgets.map_canvas import build_scaled_result_pixmap
+from app.widgets.map_canvas import METRO_GREEN, METRO_LINE_COLOR, METRO_RED, build_scaled_result_pixmap
 from app.windows.map_dialogs import MapPickerDialog, ResultMapDialog
 
 ROUNDS_PER_GAME = 6
@@ -31,7 +31,7 @@ class GameWindow(QDialog):
         super().__init__(parent)
         self.user = user
         self.setWindowTitle("Игра")
-        self.setMinimumSize(1040, 720)
+        self.setMinimumSize(1200, 900)
         self.locations = database.get_locations()
         self.floors = database.get_floors()
         self.round_locations: list[dict] = []
@@ -75,23 +75,38 @@ class GameWindow(QDialog):
         self.result_title.setObjectName("SubtitleLabel")
         self.result_text = QLabel("")
         self.result_text.setWordWrap(True)
-        self.result_map_label = QLabel()
-        self.result_map_label.setAlignment(Qt.AlignCenter)
-        self.open_full_result_button = QPushButton("Открыть большую карту результата")
+        self.open_full_result_button = QPushButton("Открыть на весь экран")
         self.next_button = QPushButton("Следующий раунд")
         self.save_result_button = QPushButton("Сохранить результат")
         self.save_result_button.setObjectName("SecondaryButton")
         result_layout.addWidget(self.result_title)
         result_layout.addWidget(self.result_text)
-        result_layout.addWidget(self.result_map_label)
         result_layout.addWidget(self.open_full_result_button)
         result_layout.addWidget(self.next_button)
         result_layout.addWidget(self.save_result_button)
         self.result_panel.hide()
 
+        self.result_map_label = QLabel()
+        self.result_map_label.setAlignment(Qt.AlignCenter)
+        self.result_map_label.setMinimumHeight(640)
+        self.result_map_label.setStyleSheet(
+            "background: #f5eef2; border: 1px solid #b87b8e; border-radius: 12px;"
+        )
+        self.result_map_container = QWidget()
+        map_layout = QVBoxLayout(self.result_map_container)
+        map_layout.setContentsMargins(0, 8, 0, 0)
+        legend = QLabel(
+            f'<span style="color:{METRO_GREEN}; font-weight:bold;">●</span> ваш ответ &nbsp;&nbsp; '
+            f'<span style="color:{METRO_RED}; font-weight:bold;">●</span> правильно'
+        )
+        legend.setAlignment(Qt.AlignCenter)
+        map_layout.addWidget(legend)
+        map_layout.addWidget(self.result_map_label)
+        self.result_map_container.hide()
+
         self.open_full_result_button.clicked.connect(self._open_full_result_map)
         self.next_button.clicked.connect(self._next_round)
-        self.save_result_button.clicked.connect(self._save_result)
+        self.save_result_button.clicked.connect(lambda: self._save_result())
 
         side.addWidget(self.location_hint)
         side.addWidget(QLabel("Выберите этаж:"))
@@ -105,7 +120,8 @@ class GameWindow(QDialog):
         body.addLayout(side, 1)
 
         root.addLayout(top)
-        root.addLayout(body, 1)
+        root.addLayout(body, 2)
+        root.addWidget(self.result_map_container, 3)
 
     def _prepare_game(self) -> None:
         if len(self.floors) == 0:
@@ -132,6 +148,7 @@ class GameWindow(QDialog):
 
     def _show_round(self) -> None:
         self.result_panel.hide()
+        self.result_map_container.hide()
         self.map_button.setEnabled(True)
         self.floor_combo.setEnabled(True)
         location = self.round_locations[self.round_index]
@@ -194,11 +211,17 @@ class GameWindow(QDialog):
         self.round_results.append(result_item)
 
         markers = [
-            (guessed_x, guessed_y, "#2aa876", "ваш ответ"),
-            (int(location["answer_x"]), int(location["answer_y"]), "#dd3344", "правильно"),
+            (guessed_x, guessed_y, METRO_GREEN, ""),
+            (int(location["answer_x"]), int(location["answer_y"]), METRO_RED, ""),
         ]
         lines = [
-            (guessed_x, guessed_y, int(location["answer_x"]), int(location["answer_y"]), "#6d4a59")
+            (
+                guessed_x,
+                guessed_y,
+                int(location["answer_x"]),
+                int(location["answer_y"]),
+                METRO_LINE_COLOR,
+            )
         ]
         correct_map_path = paths.resolve_path(correct_floor_data["map_path"])
         self.current_result_context = {
@@ -226,9 +249,10 @@ class GameWindow(QDialog):
 
         if self.round_index == ROUNDS_PER_GAME - 1:
             self.next_button.hide()
-            self.save_result_button.show()
+            self.save_result_button.hide()
             self.result_title.setText("Финальный результат")
             self.location_hint.setText(f"Игра завершена. Итог: {self.total_score}/{MAX_SCORE}.")
+            self._save_result(silent=True)
         else:
             self.next_button.show()
             self.save_result_button.hide()
@@ -238,14 +262,16 @@ class GameWindow(QDialog):
 
     def _fade_in_result_panel(self) -> None:
         self.result_panel.show()
-        effect = QGraphicsOpacityEffect(self.result_panel)
-        self.result_panel.setGraphicsEffect(effect)
-        animation = QPropertyAnimation(effect, b"opacity", self)
-        animation.setDuration(450)
-        animation.setStartValue(0.0)
-        animation.setEndValue(1.0)
-        animation.setEasingCurve(QEasingCurve.OutCubic)
-        animation.start(QPropertyAnimation.DeleteWhenStopped)
+        self.result_map_container.show()
+        for widget in (self.result_panel, self.result_map_container):
+            effect = QGraphicsOpacityEffect(widget)
+            widget.setGraphicsEffect(effect)
+            animation = QPropertyAnimation(effect, b"opacity", self)
+            animation.setDuration(300)
+            animation.setStartValue(0.0)
+            animation.setEndValue(1.0)
+            animation.setEasingCurve(QEasingCurve.OutCubic)
+            animation.start(QPropertyAnimation.DeleteWhenStopped)
 
     def _next_round(self) -> None:
         if self.round_index < ROUNDS_PER_GAME - 1:
@@ -262,9 +288,10 @@ class GameWindow(QDialog):
             self,
         ).exec()
 
-    def _save_result(self) -> None:
+    def _save_result(self, silent: bool = False) -> None:
         if self.result_saved:
-            QMessageBox.information(self, "Сохранение", "Этот результат уже сохранён.")
+            if not silent:
+                QMessageBox.information(self, "Сохранение", "Этот результат уже сохранён.")
             return
         result_id = database.save_game_result(
             self.user["id"],
@@ -275,4 +302,8 @@ class GameWindow(QDialog):
         self.result_saved = True
         self.save_result_button.setEnabled(False)
         self.save_result_button.setText("Результат сохранён")
-        QMessageBox.information(self, "Сохранение", f"Результат сохранён под номером {result_id}.")
+        saved_note = f" Результат сохранён (#{result_id})."
+        if self.round_index == ROUNDS_PER_GAME - 1:
+            self.result_text.setText(self.result_text.text() + f"<br><i>{saved_note.strip()}</i>")
+        if not silent:
+            QMessageBox.information(self, "Сохранение", f"Результат сохранён под номером {result_id}.")
