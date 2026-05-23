@@ -52,17 +52,12 @@ class AuthDialog(QDialog):
         buttons.addWidget(self.login_button)
         buttons.addWidget(self.register_button)
 
-        hint = QLabel(
-            "Пароли хранятся не текстом, а в виде PBKDF2-хеша с отдельной солью."
-        )
-        hint.setWordWrap(True)
-        hint.setStyleSheet("color: #7a5962; font-size: 12px;")
+        
 
         root.addWidget(title)
         root.addWidget(subtitle)
         root.addWidget(form_widget)
         root.addLayout(buttons)
-        root.addWidget(hint)
 
         self.login_button.clicked.connect(self._login)
         self.register_button.clicked.connect(self._register)
