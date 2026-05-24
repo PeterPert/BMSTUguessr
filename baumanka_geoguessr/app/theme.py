@@ -278,6 +278,38 @@ QTableWidget::item:selected {{
     background: {c.table_selected};
     color: {c.text};
 }}
+QLabel#GameScoreLabel {{
+    font-size: 28px;
+    font-weight: 800;
+    color: {c.title};
+    background: {c.input_background};
+    border: 3px solid {c.button_primary};
+    border-radius: 16px;
+    padding: 10px 22px;
+}}
+QLabel#GameRoundPoints {{
+    font-size: 22px;
+    font-weight: 800;
+    color: {c.button_primary};
+    background: {c.card_background};
+    border: 2px solid {c.button_primary};
+    border-radius: 12px;
+    padding: 8px 14px;
+}}
+QPushButton#GameNextButton {{
+    background: {c.button_primary};
+    color: white;
+    font-size: 17px;
+    font-weight: 800;
+    border: 2px solid {c.button_primary_hover};
+    border-radius: 14px;
+    padding: 14px 20px;
+    min-height: 52px;
+}}
+QPushButton#GameNextButton:hover {{
+    background: {c.button_primary_hover};
+    border-color: {c.title};
+}}
 QWidget#SettingsPreviewCard {{
     background: {c.card_background};
     border: 1px solid {c.border};
