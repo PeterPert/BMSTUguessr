@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from app import database, paths
-from app.widgets.map_canvas import METRO_RED
+from app.theme import get_colors
 from app.windows.map_dialogs import MapPickerDialog, ResultMapDialog
 
 
@@ -513,7 +513,7 @@ class EditorWindow(QDialog):
         map_button.clicked.connect(
             lambda: ResultMapDialog(
                 paths.resolve_path(floor["map_path"]),
-                [(self.selected_point[0], self.selected_point[1], METRO_RED, "")],
+                [(self.selected_point[0], self.selected_point[1], get_colors().marker_correct, "")],
                 [],
                 dialog,
             ).exec()

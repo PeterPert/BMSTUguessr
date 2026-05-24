@@ -8,13 +8,9 @@ from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QLabel, QSizePolicy
 
 from app.paths import MAP_SIZE
+from app.theme import get_colors
 
 Marker = tuple[int, int, QColor | str, str]
-
-# Moscow metro line palette (Sokolnicheskaya red, Zamoskvoretskaya green)
-METRO_RED = "#E42313"
-METRO_GREEN = "#44B85C"
-METRO_LINE_COLOR = "#8B6B72"
 
 
 def _draw_metro_marker(painter: QPainter, x: int, y: int, color: QColor, label: str) -> None:
@@ -40,7 +36,7 @@ def _draw_metro_marker(painter: QPainter, x: int, y: int, color: QColor, label: 
         text_y = y + outer_r + 18
         painter.setPen(QPen(QColor("white"), 3))
         painter.drawText(text_x, text_y, label)
-        painter.setPen(QPen(QColor("#4d2732")))
+        painter.setPen(QPen(QColor(get_colors().marker_label)))
         painter.drawText(text_x, text_y, label)
 
 
@@ -56,13 +52,19 @@ class MapCanvas(QLabel):
         self.setFixedSize(*MAP_SIZE)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setAlignment(Qt.AlignCenter)
-        self.setStyleSheet("background: #f5eef2; border: 1px solid #b87b8e;")
+        self._apply_frame_style()
+
+    def _apply_frame_style(self) -> None:
+        c = get_colors()
+        self.setStyleSheet(
+            f"background: {c.map_frame_background}; border: 1px solid {c.map_frame_border};"
+        )
 
     def load_map(self, path: str | Path) -> None:
         pixmap = QPixmap(str(path))
         if pixmap.isNull():
             placeholder = QPixmap(*MAP_SIZE)
-            placeholder.fill(QColor("#f9d9e4"))
+            placeholder.fill(QColor(get_colors().placeholder))
             pixmap = placeholder
         if pixmap.width() != MAP_SIZE[0] or pixmap.height() != MAP_SIZE[1]:
             pixmap = pixmap.scaled(*MAP_SIZE, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
@@ -93,7 +95,7 @@ class MapCanvas(QLabel):
     def _redraw(self) -> None:
         if self.base_pixmap is None:
             pixmap = QPixmap(*MAP_SIZE)
-            pixmap.fill(QColor("#f9d9e4"))
+            pixmap.fill(QColor(get_colors().placeholder))
         else:
             pixmap = self.base_pixmap.copy()
 
@@ -128,6 +130,6 @@ def build_scaled_result_pixmap(
     pixmap = canvas.pixmap()
     if pixmap is None:
         fallback = QPixmap(*MAP_SIZE)
-        fallback.fill(QColor("#f9d9e4"))
+        fallback.fill(QColor(get_colors().placeholder))
         pixmap = fallback
     return pixmap.scaled(max_width, max_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)

@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (
 
 from app import database, paths
 from app.scoring import calculate_distance_meters, points_for_distance
-from app.widgets.map_canvas import METRO_GREEN, METRO_LINE_COLOR, METRO_RED, build_scaled_result_pixmap
+from app.theme import get_colors
+from app.widgets.map_canvas import build_scaled_result_pixmap
 from app.windows.map_dialogs import MapPickerDialog, ResultMapDialog
 
 ROUNDS_PER_GAME = 6
@@ -43,7 +44,15 @@ class GameWindow(QDialog):
         self._build_ui()
         self._prepare_game()
 
+    def _update_legend(self) -> None:
+        c = get_colors()
+        self.legend_label.setText(
+            f'<span style="color:{c.marker_guess}; font-weight:bold;">●</span> ваш ответ &nbsp;&nbsp; '
+            f'<span style="color:{c.marker_correct}; font-weight:bold;">●</span> правильно'
+        )
+
     def _build_ui(self) -> None:
+        c = get_colors()
         root = QVBoxLayout(self)
         top = QHBoxLayout()
         self.title = QLabel("Раунд 1/6")
@@ -58,7 +67,9 @@ class GameWindow(QDialog):
         self.photo_label = QLabel("Фото")
         self.photo_label.setAlignment(Qt.AlignCenter)
         self.photo_label.setMinimumSize(560, 520)
-        self.photo_label.setStyleSheet("background: white; border: 1px solid #e3c2ca; border-radius: 16px;")
+        self.photo_label.setStyleSheet(
+            f"background: {c.input_background}; border: 1px solid {c.border}; border-radius: 16px;"
+        )
 
         side = QVBoxLayout()
         self.location_hint = QLabel("Угадайте место по фотографии")
@@ -69,7 +80,9 @@ class GameWindow(QDialog):
         self.map_button.clicked.connect(self._open_guess_map)
 
         self.result_panel = QWidget()
-        self.result_panel.setStyleSheet("background: #fff0f4; border: 1px solid #e3c2ca; border-radius: 16px;")
+        self.result_panel.setStyleSheet(
+            f"background: {c.card_background}; border: 1px solid {c.border}; border-radius: 16px;"
+        )
         result_layout = QVBoxLayout(self.result_panel)
         self.result_title = QLabel("Результат")
         self.result_title.setObjectName("SubtitleLabel")
@@ -90,17 +103,15 @@ class GameWindow(QDialog):
         self.result_map_label.setAlignment(Qt.AlignCenter)
         self.result_map_label.setMinimumHeight(640)
         self.result_map_label.setStyleSheet(
-            "background: #f5eef2; border: 1px solid #b87b8e; border-radius: 12px;"
+            f"background: {c.map_frame_background}; border: 1px solid {c.map_frame_border}; border-radius: 12px;"
         )
         self.result_map_container = QWidget()
         map_layout = QVBoxLayout(self.result_map_container)
         map_layout.setContentsMargins(0, 8, 0, 0)
-        legend = QLabel(
-            f'<span style="color:{METRO_GREEN}; font-weight:bold;">●</span> ваш ответ &nbsp;&nbsp; '
-            f'<span style="color:{METRO_RED}; font-weight:bold;">●</span> правильно'
-        )
-        legend.setAlignment(Qt.AlignCenter)
-        map_layout.addWidget(legend)
+        self.legend_label = QLabel()
+        self.legend_label.setAlignment(Qt.AlignCenter)
+        self._update_legend()
+        map_layout.addWidget(self.legend_label)
         map_layout.addWidget(self.result_map_label)
         self.result_map_container.hide()
 
@@ -210,9 +221,10 @@ class GameWindow(QDialog):
         }
         self.round_results.append(result_item)
 
+        c = get_colors()
         markers = [
-            (guessed_x, guessed_y, METRO_GREEN, ""),
-            (int(location["answer_x"]), int(location["answer_y"]), METRO_RED, ""),
+            (guessed_x, guessed_y, c.marker_guess, ""),
+            (int(location["answer_x"]), int(location["answer_y"]), c.marker_correct, ""),
         ]
         lines = [
             (
@@ -220,7 +232,7 @@ class GameWindow(QDialog):
                 guessed_y,
                 int(location["answer_x"]),
                 int(location["answer_y"]),
-                METRO_LINE_COLOR,
+                c.marker_line,
             )
         ]
         correct_map_path = paths.resolve_path(correct_floor_data["map_path"])

@@ -5,7 +5,7 @@ import sys
 from PySide6.QtWidgets import QApplication
 
 from app import database
-from app.style import APP_STYLE
+from app.theme import apply_theme, load_theme
 from app.windows.auth_window import AuthDialog
 from app.windows.main_menu import MainMenuWindow
 
@@ -13,7 +13,8 @@ from app.windows.main_menu import MainMenuWindow
 class AppController:
     def __init__(self) -> None:
         self.app = QApplication(sys.argv)
-        self.app.setStyleSheet(APP_STYLE)
+        load_theme()
+        apply_theme(self.app)
         database.initialize_db()
         self.window: MainMenuWindow | None = None
 
