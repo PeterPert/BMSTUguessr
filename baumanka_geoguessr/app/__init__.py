@@ -1,1 +1,0 @@
-"""Baumanka GeoGuessr package."""
