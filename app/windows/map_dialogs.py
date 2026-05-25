@@ -6,6 +6,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QDialog, QVBoxLayout
 
+from app.theme import get_colors
 from app.widgets.map_canvas import MapCanvas, Marker
 
 
@@ -14,7 +15,7 @@ class MapPickerDialog(QDialog):
 
     def __init__(self, map_path: str | Path, parent=None, existing_marker: tuple[int, int] | None = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Поставьте точку на карте")
+        self.setWindowTitle("BMSTUguessr")
         self.setFixedSize(1100, 700)
         self.selected_point: tuple[int, int] | None = None
         layout = QVBoxLayout(self)
@@ -22,7 +23,7 @@ class MapPickerDialog(QDialog):
         self.canvas = MapCanvas(clickable=True)
         self.canvas.load_map(map_path)
         if existing_marker is not None:
-            self.canvas.set_markers([(existing_marker[0], existing_marker[1], QColor("#2aa876"), "точка")])
+            self.canvas.set_markers([(existing_marker[0], existing_marker[1], QColor(get_colors().marker_guess), "")])
         layout.addWidget(self.canvas)
         self.canvas.clicked.connect(self._select_point)
 
@@ -41,7 +42,7 @@ class ResultMapDialog(QDialog):
         parent=None,
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Карта результата")
+        self.setWindowTitle("BMSTUguessr")
         self.setFixedSize(1100, 700)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)

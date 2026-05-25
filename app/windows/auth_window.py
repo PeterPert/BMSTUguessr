@@ -16,75 +16,113 @@ from PySide6.QtWidgets import (
 from app import database
 
 
-class AuthDialog(QDialog):
+class AdminLoginDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.user: dict | None = None
-        self.setWindowTitle("Вход в Baumanka GeoGuessr")
-        self.setMinimumWidth(420)
+        self.admin: dict | None = None
+        self.setWindowTitle("BMSTUguessr")
+        self.setMinimumWidth(400)
         self._build_ui()
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
         root.setSpacing(14)
 
-        title = QLabel("Baumanka GeoGuessr")
+        title = QLabel("BMSTUguessr")
         title.setObjectName("TitleLabel")
         title.setAlignment(Qt.AlignCenter)
-        subtitle = QLabel("Войдите или зарегистрируйтесь, чтобы сохранять результаты")
-        subtitle.setObjectName("SubtitleLabel")
-        subtitle.setAlignment(Qt.AlignCenter)
 
-        form_widget = QWidget()
-        form = QFormLayout(form_widget)
+        card = QWidget()
+        card.setObjectName("GlassCard")
+        form = QFormLayout(card)
         self.username_edit = QLineEdit()
-        self.username_edit.setPlaceholderText("например: prostonet690")
         self.password_edit = QLineEdit()
         self.password_edit.setEchoMode(QLineEdit.Password)
-        self.password_edit.setPlaceholderText("минимум 8 символов, буква и цифра")
-        form.addRow("Никнейм:", self.username_edit)
+        form.addRow("Логин:", self.username_edit)
         form.addRow("Пароль:", self.password_edit)
 
         buttons = QHBoxLayout()
         self.login_button = QPushButton("Войти")
-        self.register_button = QPushButton("Зарегистрироваться")
-        self.register_button.setObjectName("SecondaryButton")
+        self.cancel_button = QPushButton("Отмена")
+        self.cancel_button.setObjectName("SecondaryButton")
         buttons.addWidget(self.login_button)
-        buttons.addWidget(self.register_button)
-
-        hint = QLabel(
-            "Пароли хранятся не текстом, а в виде PBKDF2-хеша с отдельной солью."
-        )
-        hint.setWordWrap(True)
-        hint.setStyleSheet("color: #7a5962; font-size: 12px;")
+        buttons.addWidget(self.cancel_button)
 
         root.addWidget(title)
-        root.addWidget(subtitle)
-        root.addWidget(form_widget)
+        root.addWidget(card)
         root.addLayout(buttons)
-        root.addWidget(hint)
 
         self.login_button.clicked.connect(self._login)
-        self.register_button.clicked.connect(self._register)
+        self.cancel_button.clicked.connect(self.reject)
         self.password_edit.returnPressed.connect(self._login)
 
     def _login(self) -> None:
-        ok, message, user = database.authenticate_user(
+        ok, message, admin = database.authenticate_admin(
             self.username_edit.text(), self.password_edit.text()
         )
         if not ok:
             QMessageBox.warning(self, "Вход", message)
             return
-        self.user = user
+        self.admin = admin
         self.accept()
 
-    def _register(self) -> None:
-        ok, message, user = database.create_user(
-            self.username_edit.text(), self.password_edit.text()
-        )
-        if not ok:
-            QMessageBox.warning(self, "Регистрация", message)
+
+class StartDialog(QDialog):
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.session: dict | None = None
+        self.setWindowTitle("BMSTUguessr")
+        self.setMinimumSize(520, 360)
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        root = QVBoxLayout(self)
+        root.setContentsMargins(32, 30, 32, 28)
+        root.setSpacing(18)
+        root.setAlignment(Qt.AlignCenter)
+
+        title = QLabel("BMSTUguessr")
+        title.setObjectName("TitleLabel")
+        title.setAlignment(Qt.AlignCenter)
+
+        card = QWidget()
+        card.setObjectName("GlassCard")
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(28, 26, 28, 22)
+        card_layout.setSpacing(16)
+
+        self.continue_button = QPushButton("Продолжить")
+        self.continue_button.setMinimumHeight(56)
+        self.admin_button = QPushButton("Войти как администратор")
+        self.admin_button.setObjectName("SecondaryButton")
+        self.admin_button.setMinimumHeight(36)
+
+        admin_row = QHBoxLayout()
+        admin_row.addStretch(1)
+        admin_row.addWidget(self.admin_button)
+        admin_row.addStretch(1)
+
+        card_layout.addWidget(self.continue_button)
+        card_layout.addLayout(admin_row)
+
+        root.addStretch(1)
+        root.addWidget(title)
+        root.addWidget(card)
+        root.addStretch(1)
+
+        self.continue_button.clicked.connect(self._continue_as_guest)
+        self.admin_button.clicked.connect(self._login_as_admin)
+
+    def _continue_as_guest(self) -> None:
+        self.session = {"is_admin": False, "admin_username": None}
+        self.accept()
+
+    def _login_as_admin(self) -> None:
+        dialog = AdminLoginDialog(self)
+        if dialog.exec() != QDialog.Accepted or dialog.admin is None:
             return
-        self.user = user
-        QMessageBox.information(self, "Регистрация", "Пользователь создан. Входим в игру.")
+        self.session = {
+            "is_admin": True,
+            "admin_username": dialog.admin["username"],
+        }
         self.accept()

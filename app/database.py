@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any
 
 from . import paths
-from .security import hash_password, validate_password, validate_username, verify_password
+from .security import hash_password, verify_password
 
 LOCK_AFTER_ATTEMPTS = 5
-LOCK_SECONDS = 30
+LOCK_SECONDS = 60
+DEFAULT_ADMINS: list[tuple[str, str]] = [
+    ("bmstu_admin1", "FrostBlue2026"),
+    ("bmstu_admin2", "PortalSky2026"),
+    ("bmstu_admin3", "VectorHall2026"),
+    ("bmstu_admin4", "QuartzMap2026"),
+    ("bmstu_admin5", "AuroraFloor2026"),
+]
 
 
 def connect() -> sqlite3.Connection:
@@ -20,12 +26,17 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+def row_to_dict(row: sqlite3.Row | None) -> dict[str, Any] | None:
+    return dict(row) if row is not None else None
+
+
 def initialize_db() -> None:
     paths.ensure_dirs()
     with connect() as conn:
+        _drop_legacy_tables(conn)
         conn.executescript(
             """
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS admins (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
@@ -53,40 +64,55 @@ def initialize_db() -> None:
                 answer_x INTEGER NOT NULL,
                 answer_y INTEGER NOT NULL,
                 floor INTEGER NOT NULL,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(place, floor) REFERENCES floors(place, floor_number)
-                    ON UPDATE CASCADE ON DELETE RESTRICT
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
-            CREATE TABLE IF NOT EXISTS game_results (
+            CREATE TABLE IF NOT EXISTS game_sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
                 score INTEGER NOT NULL,
                 max_score INTEGER NOT NULL DEFAULT 30,
-                played_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id)
-                    ON UPDATE CASCADE ON DELETE CASCADE
+                played_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
-            CREATE TABLE IF NOT EXISTS game_rounds (
+            CREATE TABLE IF NOT EXISTS game_session_rounds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                result_id INTEGER NOT NULL,
+                session_id INTEGER NOT NULL,
                 round_number INTEGER NOT NULL,
-                location_id INTEGER NOT NULL,
+                location_title TEXT,
+                image_path TEXT,
+                answer_x INTEGER NOT NULL,
+                answer_y INTEGER NOT NULL,
+                answer_floor INTEGER NOT NULL,
                 guessed_x INTEGER NOT NULL,
                 guessed_y INTEGER NOT NULL,
                 guessed_floor INTEGER NOT NULL,
                 distance_meters REAL NOT NULL,
                 points INTEGER NOT NULL,
-                FOREIGN KEY(result_id) REFERENCES game_results(id)
-                    ON UPDATE CASCADE ON DELETE CASCADE,
-                FOREIGN KEY(location_id) REFERENCES locations(id)
-                    ON UPDATE CASCADE ON DELETE RESTRICT
+                FOREIGN KEY(session_id) REFERENCES game_sessions(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
             );
             """
         )
         _insert_default_floors(conn)
+        _seed_default_admins(conn)
         conn.commit()
+
+
+def _drop_legacy_tables(conn: sqlite3.Connection) -> None:
+    existing = {
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    }
+    legacy_tables = [name for name in ("game_rounds", "game_results", "users") if name in existing]
+    if not legacy_tables:
+        return
+    conn.execute("PRAGMA foreign_keys = OFF")
+    for table_name in ("game_rounds", "game_results", "users"):
+        if table_name in existing:
+            conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+    conn.execute("PRAGMA foreign_keys = ON")
 
 
 def _insert_default_floors(conn: sqlite3.Connection) -> None:
@@ -105,50 +131,38 @@ def _insert_default_floors(conn: sqlite3.Connection) -> None:
             )
 
 
-def row_to_dict(row: sqlite3.Row | None) -> dict[str, Any] | None:
-    return dict(row) if row is not None else None
+def _seed_default_admins(conn: sqlite3.Connection) -> None:
+    for username, password in DEFAULT_ADMINS:
+        exists = conn.execute(
+            "SELECT 1 FROM admins WHERE username = ?",
+            (username,),
+        ).fetchone()
+        if exists:
+            continue
+        password_hash, password_salt = hash_password(password)
+        conn.execute(
+            """
+            INSERT INTO admins(username, password_hash, password_salt)
+            VALUES (?, ?, ?)
+            """,
+            (username, password_hash, password_salt),
+        )
 
 
-# ----- Пользователи -----
+# ----- Администраторы -----
 
-def create_user(username: str, password: str) -> tuple[bool, str, dict[str, Any] | None]:
-    username = username.strip()
-    ok, message = validate_username(username)
-    if not ok:
-        return False, message, None
-    ok, message = validate_password(password)
-    if not ok:
-        return False, message, None
-
-    password_hash, password_salt = hash_password(password)
-    try:
-        with connect() as conn:
-            cur = conn.execute(
-                """
-                INSERT INTO users(username, password_hash, password_salt)
-                VALUES (?, ?, ?)
-                """,
-                (username, password_hash, password_salt),
-            )
-            user_id = cur.lastrowid
-            conn.commit()
-            return True, "Пользователь создан.", {"id": user_id, "username": username}
-    except sqlite3.IntegrityError:
-        return False, "Такой никнейм уже занят.", None
-
-
-def authenticate_user(username: str, password: str) -> tuple[bool, str, dict[str, Any] | None]:
+def authenticate_admin(username: str, password: str) -> tuple[bool, str, dict[str, Any] | None]:
     username = username.strip()
     with connect() as conn:
         row = conn.execute(
-            "SELECT * FROM users WHERE username = ?",
+            "SELECT * FROM admins WHERE username = ?",
             (username,),
         ).fetchone()
         if row is None:
-            return False, "Неверный никнейм или пароль.", None
+            return False, "Неверный логин или пароль.", None
 
-        user = dict(row)
-        locked_until = user.get("locked_until")
+        admin = dict(row)
+        locked_until = admin.get("locked_until")
         if locked_until:
             try:
                 unlock_time = datetime.fromisoformat(locked_until)
@@ -158,25 +172,25 @@ def authenticate_user(username: str, password: str) -> tuple[bool, str, dict[str
                 left = int((unlock_time - datetime.now()).total_seconds()) + 1
                 return False, f"Слишком много попыток. Повторите через {left} сек.", None
 
-        if not verify_password(password, user["password_hash"], user["password_salt"]):
-            failed = int(user["failed_attempts"] or 0) + 1
+        if not verify_password(password, admin["password_hash"], admin["password_salt"]):
+            failed = int(admin["failed_attempts"] or 0) + 1
             locked_value = None
             if failed >= LOCK_AFTER_ATTEMPTS:
                 locked_value = (datetime.now() + timedelta(seconds=LOCK_SECONDS)).isoformat(timespec="seconds")
                 failed = 0
             conn.execute(
-                "UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?",
-                (failed, locked_value, user["id"]),
+                "UPDATE admins SET failed_attempts = ?, locked_until = ? WHERE id = ?",
+                (failed, locked_value, admin["id"]),
             )
             conn.commit()
-            return False, "Неверный никнейм или пароль.", None
+            return False, "Неверный логин или пароль.", None
 
         conn.execute(
-            "UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?",
-            (user["id"],),
+            "UPDATE admins SET failed_attempts = 0, locked_until = NULL WHERE id = ?",
+            (admin["id"],),
         )
         conn.commit()
-        return True, "Вход выполнен.", {"id": user["id"], "username": user["username"]}
+        return True, "Вход выполнен.", {"id": admin["id"], "username": admin["username"]}
 
 
 # ----- Этажи -----
@@ -219,7 +233,7 @@ def upsert_floor(
         conn.commit()
 
 
-# ----- Метки/локации -----
+# ----- Метки / локации -----
 
 def get_locations(place: str = "gz") -> list[dict[str, Any]]:
     with connect() as conn:
@@ -289,28 +303,34 @@ def delete_location(location_id: int) -> None:
         conn.commit()
 
 
-# ----- Результаты -----
+# ----- Результаты последней игры / история -----
 
-def save_game_result(user_id: int, score: int, rounds: list[dict[str, Any]], max_score: int = 30) -> int:
+def save_game_result(score: int, rounds: list[dict[str, Any]], max_score: int = 30) -> int:
     with connect() as conn:
         cur = conn.execute(
-            "INSERT INTO game_results(user_id, score, max_score) VALUES (?, ?, ?)",
-            (user_id, score, max_score),
+            "INSERT INTO game_sessions(score, max_score) VALUES (?, ?)",
+            (score, max_score),
         )
-        result_id = int(cur.lastrowid)
+        session_id = int(cur.lastrowid)
         for index, item in enumerate(rounds, start=1):
             conn.execute(
                 """
-                INSERT INTO game_rounds(
-                    result_id, round_number, location_id, guessed_x, guessed_y,
-                    guessed_floor, distance_meters, points
+                INSERT INTO game_session_rounds(
+                    session_id, round_number, location_title, image_path,
+                    answer_x, answer_y, answer_floor,
+                    guessed_x, guessed_y, guessed_floor,
+                    distance_meters, points
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    result_id,
+                    session_id,
                     index,
-                    item["location_id"],
+                    item.get("location_title"),
+                    item.get("image_path"),
+                    item["answer_x"],
+                    item["answer_y"],
+                    item["answer_floor"],
                     item["guessed_x"],
                     item["guessed_y"],
                     item["guessed_floor"],
@@ -319,17 +339,16 @@ def save_game_result(user_id: int, score: int, rounds: list[dict[str, Any]], max
                 ),
             )
         conn.commit()
-        return result_id
+        return session_id
 
 
 def get_results(limit: int = 50) -> list[dict[str, Any]]:
     with connect() as conn:
         rows = conn.execute(
             """
-            SELECT r.id, u.username, r.score, r.max_score, r.played_at
-            FROM game_results r
-            JOIN users u ON u.id = r.user_id
-            ORDER BY r.played_at DESC, r.id DESC
+            SELECT id, score, max_score, played_at
+            FROM game_sessions
+            ORDER BY played_at DESC, id DESC
             LIMIT ?
             """,
             (limit,),

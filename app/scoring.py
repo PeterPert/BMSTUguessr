@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-FLOOR_PENALTY_METERS = 4.0
+FLOOR_PENALTY_METERS = 15.0
 DEFAULT_METERS_PER_PIXEL = 0.1
 
 

@@ -8,10 +8,10 @@ from app import database
 class ResultsDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("История результатов")
+        self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(620, 420)
         layout = QVBoxLayout(self)
-        title = QLabel("Последние результаты")
+        title = QLabel("BMSTUguessr")
         title.setObjectName("TitleLabel")
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["Игрок", "Очки", "Максимум", "Когда"])
