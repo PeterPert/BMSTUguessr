@@ -346,8 +346,8 @@ class GameWindow(QDialog):
 
         c = get_colors()
         markers = [
-            (guessed_x, guessed_y, c.marker_guess, ""),
-            (int(location["answer_x"]), int(location["answer_y"]), c.marker_correct, ""),
+            (guessed_x, guessed_y, c.marker_guess, "Ваш ответ"),
+            (int(location["answer_x"]), int(location["answer_y"]), c.marker_correct, "Верно"),
         ]
         lines = [
             (

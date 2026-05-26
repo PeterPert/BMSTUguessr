@@ -44,8 +44,8 @@ class ThemeColors:
     status_ok: str = "#1c8a52"
     status_pending: str = "#5e7f97"
 
-    marker_guess: str = "#e53935"
-    marker_correct: str = "#25a244"
+    marker_guess: str = "#ef4444"
+    marker_correct: str = "#22c55e"
     marker_line: str = "#0e70b3"
     marker_label: str = "#0f2740"
     placeholder: str = "#eaf7ff"

@@ -6,6 +6,8 @@ from typing import Iterable
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QLabel, QSizePolicy
+from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 
 from app.paths import MAP_SIZE
 from app.theme import get_colors
@@ -13,31 +15,97 @@ from app.theme import get_colors
 Marker = tuple[int, int, QColor | str, str]
 
 
-def _draw_metro_marker(painter: QPainter, x: int, y: int, color: QColor, label: str) -> None:
-    """Rounded station pin: white ring, fill, inner dot — like metro map markers."""
-    outer_r, inner_r, dot_r = 15, 10, 4
-    painter.setPen(QPen(QColor("white"), 5))
+def _draw_pin_marker(painter: QPainter, x: int, y: int, color: QColor, label: str = "") -> None:
+    """
+    Рисует маркер в стиле гео-пина.
+    Координата (x, y) находится ровно в кончике маркера.
+    """
+
+    painter.save()
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+    # Размеры маркера
+    pin_width = 34
+    pin_height = 46
+    head_radius = 16
+    inner_radius = 7
+
+    tip_x = float(x)
+    tip_y = float(y)
+
+    center_x = tip_x
+    center_y = tip_y - pin_height + head_radius + 2
+
+    # Основная форма пина
+    path = QPainterPath()
+    path.moveTo(tip_x, tip_y)
+
+    path.cubicTo(
+        tip_x - pin_width * 0.55,
+        tip_y - 16,
+        center_x - head_radius,
+        center_y + 8,
+        center_x - head_radius,
+        center_y,
+    )
+
+    path.cubicTo(
+        center_x - head_radius,
+        center_y - head_radius,
+        center_x + head_radius,
+        center_y - head_radius,
+        center_x + head_radius,
+        center_y,
+    )
+
+    path.cubicTo(
+        center_x + head_radius,
+        center_y + 8,
+        tip_x + pin_width * 0.55,
+        tip_y - 16,
+        tip_x,
+        tip_y,
+    )
+
+    path.closeSubpath()
+
+    # Тень
+    shadow_path = QPainterPath(path)
+    painter.translate(2, 3)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(0, 0, 0, 45))
+    painter.drawPath(shadow_path)
+    painter.translate(-2, -3)
+
+    # Основной цвет пина
+    painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(color)
-    painter.drawEllipse(QPoint(x, y), outer_r, outer_r)
-    painter.setPen(QPen(color.darker(115), 2))
+    painter.drawPath(path)
+
+    # Лёгкая обводка
+    painter.setPen(QPen(color.darker(125), 2))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawPath(path)
+
+    # Белое отверстие внутри
+    painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(QColor("white"))
-    painter.drawEllipse(QPoint(x, y), inner_r, inner_r)
-    painter.setBrush(color)
-    painter.setPen(Qt.NoPen)
-    painter.drawEllipse(QPoint(x, y), dot_r, dot_r)
+    painter.drawEllipse(QPointF(center_x, center_y), inner_radius, inner_radius)
+
+    # Маленькая цветная точка внутри
+    painter.setBrush(color.darker(110))
+    painter.drawEllipse(QPointF(center_x, center_y), 3, 3)
+
+    # Подпись, если передана
     if label:
-        font = painter.font()
-        font.setBold(True)
+        font = QFont()
         font.setPointSize(9)
+        font.setBold(True)
         painter.setFont(font)
-        metrics = painter.fontMetrics()
-        text_w = metrics.horizontalAdvance(label)
-        text_x = x - text_w // 2
-        text_y = y + outer_r + 18
-        painter.setPen(QPen(QColor("white"), 3))
-        painter.drawText(text_x, text_y, label)
-        painter.setPen(QPen(QColor(get_colors().marker_label)))
-        painter.drawText(text_x, text_y, label)
+        painter.setPen(QPen(QColor("#0f2740")))
+        painter.drawText(QPointF(tip_x + 18, tip_y - 20), label)
+
+    painter.restore()
 
 
 class MapCanvas(QLabel):
@@ -110,7 +178,7 @@ class MapCanvas(QLabel):
             painter.drawLine(QPoint(x1, y1), QPoint(x2, y2))
 
         for x, y, color, label in self.markers:
-            _draw_metro_marker(painter, x, y, QColor(color), label)
+            _draw_pin_marker(painter, x, y, QColor(color), label)
 
         painter.end()
         self.setPixmap(pixmap)
