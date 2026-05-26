@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import sys
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from app import database
+from app.paths import PROJECT_ROOT
 from app.theme import apply_theme, load_theme
 from app.windows.auth_window import StartDialog
 from app.windows.main_menu import MainMenuWindow
@@ -13,6 +15,7 @@ from app.windows.main_menu import MainMenuWindow
 class AppController:
     def __init__(self) -> None:
         self.app = QApplication(sys.argv)
+        self.app.setWindowIcon(QIcon(str(PROJECT_ROOT / "data" / "icons" / "bmstu_logo.svg")))
         load_theme()
         apply_theme(self.app)
         database.initialize_db()

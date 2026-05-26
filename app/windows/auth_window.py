@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from app import database
+from app.widgets.logo_header import build_logo_header
 
 
 class AdminLoginDialog(QDialog):
@@ -28,9 +29,7 @@ class AdminLoginDialog(QDialog):
         root = QVBoxLayout(self)
         root.setSpacing(14)
 
-        title = QLabel("BMSTUguessr")
-        title.setObjectName("TitleLabel")
-        title.setAlignment(Qt.AlignCenter)
+        title = build_logo_header(title_size=30, icon_size=64, spacing=8)
 
         card = QWidget()
         card.setObjectName("GlassCard")
@@ -81,9 +80,7 @@ class StartDialog(QDialog):
         root.setSpacing(18)
         root.setAlignment(Qt.AlignCenter)
 
-        title = QLabel("BMSTUguessr")
-        title.setObjectName("TitleLabel")
-        title.setAlignment(Qt.AlignCenter)
+        title = build_logo_header(title_size=40, icon_size=88, spacing=12)
 
         card = QWidget()
         card.setObjectName("GlassCard")

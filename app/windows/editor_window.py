@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from app import database, paths
 from app.theme import get_colors
+from app.widgets.logo_header import build_logo_header
 from app.windows.map_dialogs import MapPickerDialog, ResultMapDialog
 
 
@@ -69,8 +70,7 @@ class EditorWindow(QDialog):
 
         header = QVBoxLayout()
         header.setSpacing(4)
-        title = QLabel("BMSTUguessr")
-        title.setObjectName("TitleLabel")
+        title = build_logo_header(title_size=28, icon_size=56, spacing=6)
         subtitle = QLabel("Панель администратора")
         subtitle.setObjectName("SubtitleLabel")
         subtitle.setWordWrap(True)

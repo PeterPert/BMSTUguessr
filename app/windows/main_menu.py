@@ -3,6 +3,8 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QMainWindow, QPushButton, QVBoxLayout, QWidget
 
+from app.widgets.logo_header import build_logo_header
+
 from app.windows.editor_window import EditorWindow
 from app.windows.game_window import GameWindow
 from app.windows.rules_window import RulesDialog
@@ -23,9 +25,7 @@ class MainMenuWindow(QMainWindow):
         layout.setAlignment(Qt.AlignCenter)
         layout.setSpacing(16)
 
-        title = QLabel("BMSTUguessr")
-        title.setObjectName("TitleLabel")
-        title.setAlignment(Qt.AlignCenter)
+        title = build_logo_header(title_size=44, icon_size=96, spacing=14)
 
         layout.addStretch(1)
         layout.addWidget(title)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout
 
 from app import database
+from app.widgets.logo_header import build_logo_header
 
 
 class ResultsDialog(QDialog):
@@ -11,8 +12,7 @@ class ResultsDialog(QDialog):
         self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(620, 420)
         layout = QVBoxLayout(self)
-        title = QLabel("BMSTUguessr")
-        title.setObjectName("TitleLabel")
+        title = build_logo_header(title_size=30, icon_size=64, spacing=8)
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["Игрок", "Очки", "Максимум", "Когда"])
         self.table.horizontalHeader().setStretchLastSection(True)

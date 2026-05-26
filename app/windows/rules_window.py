@@ -3,6 +3,8 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from app.widgets.logo_header import build_logo_header
+
 
 class RulesDialog(QDialog):
     def __init__(self, parent=None) -> None:
@@ -14,9 +16,7 @@ class RulesDialog(QDialog):
         layout.setContentsMargins(24, 22, 24, 22)
         layout.setSpacing(16)
 
-        title = QLabel("BMSTUguessr")
-        title.setObjectName("TitleLabel")
-        title.setAlignment(Qt.AlignCenter)
+        title = build_logo_header(title_size=34, icon_size=72, spacing=10)
 
         card = QWidget()
         card.setObjectName("GlassCard")
