@@ -16,6 +16,12 @@ class MainMenuWindow(QMainWindow):
         self.session = session
         self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(520, 620)
+        
+        # Горячая клавиша F11 для перехода в полноэкранный режим
+        from PySide6.QtGui import QKeySequence, QShortcut
+        self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
+        self.fs_shortcut.activated.connect(self._toggle_fullscreen)
+
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -36,11 +42,6 @@ class MainMenuWindow(QMainWindow):
             admin_label.setObjectName("SubtitleLabel")
             layout.addWidget(admin_label)
 
-        max_score_label = QLabel("Максимальный результат: 30 очков")
-        max_score_label.setAlignment(Qt.AlignCenter)
-        max_score_label.setObjectName("SubtitleLabel")
-        layout.addWidget(max_score_label)
-        layout.addSpacing(12)
 
         start_button = QPushButton("Начать игру")
         start_button.setMinimumHeight(48)
@@ -78,3 +79,9 @@ class MainMenuWindow(QMainWindow):
 
     def _open_rules(self) -> None:
         RulesDialog(self).exec()
+
+    def _toggle_fullscreen(self) -> None:
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()

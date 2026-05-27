@@ -55,6 +55,14 @@ class EditorWindow(QDialog):
         self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(1180, 820)
         self.resize(1240, 860)
+
+        # Разрешаем сворачивание/разворачивание
+        self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
+
+        # Горячая клавиша F11 для перехода в полноэкранный режим
+        from PySide6.QtGui import QKeySequence, QShortcut
+        self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
+        self.fs_shortcut.activated.connect(self._toggle_fullscreen)
         self.current_location_id: int | None = None
         self.selected_photo_path: str | None = None
         self.selected_map_path: str | None = None
@@ -537,3 +545,9 @@ class EditorWindow(QDialog):
         self.preview_photo.setPixmap(
             pixmap.scaled(target_w, target_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         )
+
+    def _toggle_fullscreen(self) -> None:
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()

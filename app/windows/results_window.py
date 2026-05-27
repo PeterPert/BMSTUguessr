@@ -11,6 +11,16 @@ class ResultsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(620, 420)
+
+        # Разрешаем сворачивание/разворачивание
+        from PySide6.QtCore import Qt
+        self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
+
+        # Горячая клавиша F11
+        from PySide6.QtGui import QKeySequence, QShortcut
+        self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
+        self.fs_shortcut.activated.connect(self._toggle_fullscreen)
+
         layout = QVBoxLayout(self)
         title = build_logo_header(title_size=30, icon_size=64, spacing=8)
         self.table = QTableWidget(0, 4)
@@ -31,3 +41,9 @@ class ResultsDialog(QDialog):
             for column, value in enumerate(values):
                 self.table.setItem(row_index, column, QTableWidgetItem(value))
         self.table.resizeColumnsToContents()
+
+    def _toggle_fullscreen(self) -> None:
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()

@@ -15,7 +15,7 @@ from app.windows.main_menu import MainMenuWindow
 class AppController:
     def __init__(self) -> None:
         self.app = QApplication(sys.argv)
-        self.app.setWindowIcon(QIcon(str(PROJECT_ROOT / "data" / "icons" / "bmstu_logo.svg")))
+        self.app.setWindowIcon(QIcon(str(PROJECT_ROOT / "data" / "icons" / "navigator_icon.svg")))
         load_theme()
         apply_theme(self.app)
         database.initialize_db()

@@ -263,6 +263,14 @@ class GameWindow(QDialog):
         self.setMinimumSize(1220, 760)
         self.resize(1320, 800)
 
+        # Разрешаем сворачивание/разворачивание
+        self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
+
+        # Горячая клавиша F11 для перехода в полноэкранный режим
+        from PySide6.QtGui import QKeySequence, QShortcut
+        self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
+        self.fs_shortcut.activated.connect(self._toggle_fullscreen)
+
         self.locations = database.get_locations()
         self.floors = database.get_floors()
 
@@ -1144,3 +1152,9 @@ class GameWindow(QDialog):
             self.current_result_context["lines"],
             self,
         ).exec()
+
+    def _toggle_fullscreen(self) -> None:
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()

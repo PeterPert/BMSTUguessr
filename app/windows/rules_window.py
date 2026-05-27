@@ -12,6 +12,14 @@ class RulesDialog(QDialog):
         self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(620, 520)
 
+        # Разрешаем сворачивание/разворачивание
+        self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
+
+        # Горячая клавиша F11
+        from PySide6.QtGui import QKeySequence, QShortcut
+        self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
+        self.fs_shortcut.activated.connect(self._toggle_fullscreen)
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 22, 24, 22)
         layout.setSpacing(16)
@@ -51,3 +59,9 @@ class RulesDialog(QDialog):
         layout.addWidget(title)
         layout.addWidget(card, 1)
         layout.addWidget(close_button)
+
+    def _toggle_fullscreen(self) -> None:
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
