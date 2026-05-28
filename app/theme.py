@@ -1,4 +1,4 @@
-from __future__ import annotations
+from __future__ import annotations # Чтобы писать ThemeColors 
 
 from dataclasses import dataclass
 
@@ -51,6 +51,7 @@ class ThemeColors:
     placeholder: str = "#eaf7ff"
 
 
+# Текущая активная тема
 _current = ThemeColors()
 
 
