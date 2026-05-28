@@ -57,7 +57,6 @@ baumanka_geoguessr/
 │  ├─ paths.py             # пути к data/, копирование изображений
 │  ├─ scoring.py           # расстояние и очки
 │  ├─ security.py          # хеширование паролей
-│  ├─ style.py             # обёртка над темой
 │  ├─ theme.py             # цвета интерфейса, сохранение темы
 │  ├─ widgets/
 │  │  ├─ map_canvas.py     # отрисовка карты и меток
@@ -67,7 +66,6 @@ baumanka_geoguessr/
 │     ├─ main_menu.py
 │     ├─ game_window.py
 │     ├─ editor_window.py
-│     ├─ settings_window.py
 │     ├─ map_dialogs.py
 │     ├─ results_window.py
 │     └─ rules_window.py
