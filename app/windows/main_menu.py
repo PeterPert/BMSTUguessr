@@ -16,7 +16,7 @@ class MainMenuWindow(QMainWindow):
         self.session = session
         self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(520, 620)
-        
+
         # Горячая клавиша F11 для перехода в полноэкранный режим
         from PySide6.QtGui import QKeySequence, QShortcut
         self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
@@ -41,7 +41,6 @@ class MainMenuWindow(QMainWindow):
             admin_label.setAlignment(Qt.AlignCenter)
             admin_label.setObjectName("SubtitleLabel")
             layout.addWidget(admin_label)
-
 
         start_button = QPushButton("Начать игру")
         start_button.setMinimumHeight(48)

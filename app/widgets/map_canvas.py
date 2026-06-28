@@ -3,11 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable
 
-from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPixmap
+from PySide6.QtCore import QPoint, QPointF, Qt, Signal
+from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import QLabel, QSizePolicy
-from PySide6.QtCore import QPoint, QPointF, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 
 from app.paths import MAP_SIZE
 from app.theme import get_colors

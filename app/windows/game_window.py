@@ -1157,4 +1157,4 @@ class GameWindow(QDialog):
         if self.isFullScreen():
             self.showNormal()
         else:
-            self.showFullScreen()
+            self.showFullScreen()
