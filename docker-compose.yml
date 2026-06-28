@@ -1,0 +1,47 @@
+# ============================================================
+#  Docker Compose — BMSTUguessr
+# ============================================================
+#
+#  Linux:
+#    xhost +local:docker
+#    docker compose up
+#
+#  Windows (WSL2 + VcXsrv / X410):
+#    1. Запустить X-сервер (VcXsrv с "Disable access control")
+#    2. docker compose --profile windows up
+#
+# ============================================================
+
+services:
+  # ---------- Linux (default) ----------
+  bmstuguessr:
+    build: .
+    image: bmstuguessr:latest
+    container_name: bmstuguessr
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    volumes:
+      # Проброс X11 сокета для отображения GUI
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Сохранение игровых данных между запусками
+      - bmstuguessr-data:/app/data
+    network_mode: host
+    restart: "no"
+
+  # ---------- Windows (WSL2 + X-сервер) ----------
+  bmstuguessr-windows:
+    build: .
+    image: bmstuguessr:latest
+    container_name: bmstuguessr-win
+    profiles:
+      - windows
+    environment:
+      # IP хост-машины из WSL2
+      - DISPLAY=host.docker.internal:0.0
+    volumes:
+      - bmstuguessr-data:/app/data
+    restart: "no"
+
+volumes:
+  bmstuguessr-data:
+    driver: local

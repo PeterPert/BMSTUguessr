@@ -28,6 +28,9 @@
 
 ```text
 baumanka_geoguessr/
+├── Dockerfile             # 🐳 Сборка Docker-образа приложения
+├── docker-compose.yml     # 🐳 Оркестрация контейнеров (Linux / Windows)
+├── .dockerignore          # 🐳 Исключения для Docker-контекста
 ├── main.py                # Точка входа в приложение и координация окон
 ├── requirements.txt       # Список внешних зависимостей проекта
 ├── README.md              # Документация проекта
@@ -55,6 +58,7 @@ baumanka_geoguessr/
     ├── maps/              # Изображения планов этажей (floor_*.png)
     └── photos/            # Игровые фотографии локаций (location_*.jpg)
 ```
+
 
 ---
 
@@ -91,6 +95,48 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
+
+---
+
+## 🐳 Запуск через Docker
+
+Альтернативный способ запуска — Docker-контейнер. Все зависимости уже внутри образа.
+
+### Сборка образа
+
+```bash
+docker build -t bmstuguessr .
+```
+
+### Запуск (Linux)
+
+```bash
+# Разрешить Docker доступ к X11
+xhost +local:docker
+
+# Запуск через Docker Compose
+docker compose up
+
+# Или напрямую
+docker run --rm -it \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    -v bmstuguessr-data:/app/data \
+    --network host \
+    bmstuguessr
+```
+
+### Запуск (Windows / WSL2)
+
+1.  Установите X-сервер (например, [VcXsrv](https://sourceforge.net/projects/vcxsrv/) или [X410](https://x410.dev/)).
+2.  Запустите VcXsrv с опцией **Disable access control**.
+3.  Запустите контейнер:
+
+```bash
+docker compose --profile windows up
+```
+
+> **Примечание:** Данные игры (база данных, фото, темы) сохраняются в Docker volume `bmstuguessr-data` между запусками.
 
 ---
 
