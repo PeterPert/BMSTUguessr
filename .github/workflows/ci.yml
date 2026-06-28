@@ -1,0 +1,115 @@
+# ============================================================
+#  CI Pipeline — BMSTUguessr
+# ============================================================
+#  Триггеры:
+#    - push / PR в main, develop  →  lint + test + docker build
+#    - push тега v*               →  lint + test + release
+# ============================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write          # для создания GitHub Release
+  packages: write          # для пуша в GHCR
+
+env:
+  PYTHON_VERSION: "3.12"
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/bmstuguessr
+
+jobs:
+  # ==================== LINT ====================
+  lint:
+    name: 🔍 Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install lint tools
+        run: pip install flake8 black
+
+      - name: flake8 — code style
+        run: flake8 app/ tests/ --max-line-length=120 --count --show-source --statistics
+
+      - name: black — formatting check
+        run: black --check --diff app/ tests/
+
+  # ==================== TEST ====================
+  test:
+    name: 🧪 Test
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
+
+  # ==================== DOCKER BUILD ====================
+  docker:
+    name: 🐳 Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t bmstuguessr:ci-${{ github.sha }} .
+
+      - name: Verify image starts
+        run: docker run --rm bmstuguessr:ci-${{ github.sha }} python -c "from app import scoring; print('OK')"
+
+  # ==================== RELEASE ====================
+  # Запускается ТОЛЬКО при пуше тега v*  (напр. v1.0.0)
+  release:
+    name: 📦 Release
+    runs-on: ubuntu-latest
+    needs: [test, docker]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Публикация Docker-образа в GitHub Container Registry ---
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          docker build -t $IMAGE_NAME:$TAG -t $IMAGE_NAME:latest .
+          docker push $IMAGE_NAME:$TAG
+          docker push $IMAGE_NAME:latest
+          echo "### 🐳 Docker image pushed" >> $GITHUB_STEP_SUMMARY
+          echo "\`$IMAGE_NAME:$TAG\`" >> $GITHUB_STEP_SUMMARY
+
+      # --- Создание GitHub Release ---
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: false
