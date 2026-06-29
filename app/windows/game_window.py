@@ -717,20 +717,10 @@ class GameWindow(QDialog):
         self.distance_value = QLabel("—")
         self.penalty_value = QLabel("—")
 
-        details_layout.addWidget(
-            self._make_result_row("guess_floor", "Ваш этаж:", self.guessed_floor_value)
-        )
-        details_layout.addWidget(
-            self._make_result_row(
-                "correct_floor", "Правильный этаж:", self.correct_floor_value
-            )
-        )
-        details_layout.addWidget(
-            self._make_result_row("distance", "Расстояние:", self.distance_value)
-        )
-        details_layout.addWidget(
-            self._make_result_row("floor_penalty", "Штраф за этаж:", self.penalty_value)
-        )
+        details_layout.addWidget(self._make_result_row("guess_floor", "Ваш этаж:", self.guessed_floor_value))
+        details_layout.addWidget(self._make_result_row("correct_floor", "Правильный этаж:", self.correct_floor_value))
+        details_layout.addWidget(self._make_result_row("distance", "Расстояние:", self.distance_value))
+        details_layout.addWidget(self._make_result_row("floor_penalty", "Штраф за этаж:", self.penalty_value))
 
         self.open_full_result_button = QPushButton("⛶  Карта на весь экран")
         self.open_full_result_button.setMinimumHeight(50)
@@ -777,9 +767,7 @@ class GameWindow(QDialog):
         card.hide()
         return card
 
-    def _make_result_row(
-        self, icon_kind: str, title: str, value_label: QLabel
-    ) -> QWidget:
+    def _make_result_row(self, icon_kind: str, title: str, value_label: QLabel) -> QWidget:
         row = QWidget()
         row.setStyleSheet("""
             QWidget {
@@ -964,9 +952,7 @@ class GameWindow(QDialog):
 
         floor = database.get_floor(int(guessed_floor))
         if floor is None:
-            QMessageBox.warning(
-                self, "BMSTUguessr", "Схема выбранного этажа не найдена."
-            )
+            QMessageBox.warning(self, "BMSTUguessr", "Схема выбранного этажа не найдена.")
             return
 
         dialog = MapPickerDialog(paths.resolve_path(floor["map_path"]), self)
@@ -978,9 +964,7 @@ class GameWindow(QDialog):
                 dialog.selected_point[1],
             )
 
-    def _process_guess(
-        self, guessed_floor: int, guessed_x: int, guessed_y: int
-    ) -> None:
+    def _process_guess(self, guessed_floor: int, guessed_x: int, guessed_y: int) -> None:
         location = self.round_locations[self.round_index]
 
         correct_floor = int(location["floor"])

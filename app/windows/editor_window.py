@@ -163,9 +163,7 @@ class EditorWindow(QDialog):
 
         choose_map_button.clicked.connect(self._choose_map)
         save_floor_button.clicked.connect(self._save_floor)
-        self.floors_table.itemSelectionChanged.connect(
-            self._load_selected_floor_into_form
-        )
+        self.floors_table.itemSelectionChanged.connect(self._load_selected_floor_into_form)
         return tab
 
     def _choose_map(self) -> None:
@@ -207,12 +205,8 @@ class EditorWindow(QDialog):
                 paths.MAPS_DIR,
                 f"floor_{floor_number}",
             )
-            database.upsert_floor(
-                floor_number, stored_path, float(self.scale_spin.value())
-            )
-        except (
-            Exception
-        ) as exc:  # noqa: BLE001 - показываем пользователю понятную ошибку
+            database.upsert_floor(floor_number, stored_path, float(self.scale_spin.value()))
+        except Exception as exc:  # noqa: BLE001 - показываем пользователю понятную ошибку
             QMessageBox.critical(self, "Этаж", f"Не удалось сохранить этаж:\n{exc}")
             return
         QMessageBox.information(self, "Этаж", "Этаж сохранён.")
@@ -222,15 +216,9 @@ class EditorWindow(QDialog):
         self.floors = database.get_floors()
         self.floors_table.setRowCount(len(self.floors))
         for row_index, row in enumerate(self.floors):
-            self.floors_table.setItem(
-                row_index, 0, QTableWidgetItem(str(row["floor_number"]))
-            )
-            self.floors_table.setItem(
-                row_index, 1, QTableWidgetItem(f"{row['meters_per_pixel']:.3f}")
-            )
-            self.floors_table.setItem(
-                row_index, 2, QTableWidgetItem(Path(row["map_path"]).name)
-            )
+            self.floors_table.setItem(row_index, 0, QTableWidgetItem(str(row["floor_number"])))
+            self.floors_table.setItem(row_index, 1, QTableWidgetItem(f"{row['meters_per_pixel']:.3f}"))
+            self.floors_table.setItem(row_index, 2, QTableWidgetItem(Path(row["map_path"]).name))
         self.floors_table.resizeColumnsToContents()
         self._refresh_floor_combo()
 
@@ -317,9 +305,7 @@ class EditorWindow(QDialog):
         card_layout.addLayout(form_column, 1)
 
         self.locations_table = QTableWidget(0, 4)
-        self.locations_table.setHorizontalHeaderLabels(
-            ["ID", "Название", "Этаж", "Точка"]
-        )
+        self.locations_table.setHorizontalHeaderLabels(["ID", "Название", "Этаж", "Точка"])
         self.locations_table.horizontalHeader().setStretchLastSection(True)
         self.locations_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.locations_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -337,9 +323,7 @@ class EditorWindow(QDialog):
         save_location_button.clicked.connect(self._save_location)
         new_location_button.clicked.connect(self._clear_location_form)
         delete_location_button.clicked.connect(self._delete_selected_location)
-        self.locations_table.itemSelectionChanged.connect(
-            self._load_selected_location_into_form
-        )
+        self.locations_table.itemSelectionChanged.connect(self._load_selected_location_into_form)
         return tab
 
     def _set_photo_status(self, path: str | None) -> None:
@@ -365,9 +349,7 @@ class EditorWindow(QDialog):
         self.floor_combo.blockSignals(True)
         self.floor_combo.clear()
         for floor in database.get_floors():
-            self.floor_combo.addItem(
-                f"{floor['floor_number']} этаж", int(floor["floor_number"])
-            )
+            self.floor_combo.addItem(f"{floor['floor_number']} этаж", int(floor["floor_number"]))
         if current is not None:
             index = self.floor_combo.findData(current)
             if index >= 0:
@@ -401,9 +383,7 @@ class EditorWindow(QDialog):
             QMessageBox.warning(self, "Точка", "Этаж не найден.")
             return
         existing = self.selected_point
-        dialog = MapPickerDialog(
-            paths.resolve_path(floor["map_path"]), self, existing_marker=existing
-        )
+        dialog = MapPickerDialog(paths.resolve_path(floor["map_path"]), self, existing_marker=existing)
         if dialog.exec() == QDialog.Accepted and dialog.selected_point:
             self.selected_point = dialog.selected_point
             self._set_point_status(self.selected_point)
@@ -453,9 +433,7 @@ class EditorWindow(QDialog):
                 point,
             ]
             for column, value in enumerate(values):
-                self.locations_table.setItem(
-                    row_index, column, QTableWidgetItem(str(value))
-                )
+                self.locations_table.setItem(row_index, column, QTableWidgetItem(str(value)))
         self.locations_table.resizeColumnsToContents()
 
     def _load_selected_location_into_form(self) -> None:
@@ -503,11 +481,7 @@ class EditorWindow(QDialog):
         self._load_locations()
 
     def _preview_location(self) -> None:
-        if (
-            not self.selected_photo_path
-            or self.floor_combo.currentData() is None
-            or self.selected_point is None
-        ):
+        if not self.selected_photo_path or self.floor_combo.currentData() is None or self.selected_point is None:
             QMessageBox.warning(self, "Проверка", "Нужно выбрать фото, этаж и точку.")
             return
         floor = database.get_floor(int(self.floor_combo.currentData()))
@@ -526,9 +500,7 @@ class EditorWindow(QDialog):
         photo.setAlignment(Qt.AlignCenter)
         pixmap = QPixmap(str(paths.resolve_path(self.selected_photo_path)))
         if not pixmap.isNull():
-            photo.setPixmap(
-                pixmap.scaled(440, 540, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            )
+            photo.setPixmap(pixmap.scaled(440, 540, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:
             photo.setText("Фото не открылось")
 
@@ -540,9 +512,7 @@ class EditorWindow(QDialog):
         title = self.title_edit.text().strip() or "Без названия"
         info_layout.addWidget(QLabel(f"<b>{title}</b>"))
         info_layout.addWidget(QLabel(f"Этаж: {self.floor_combo.currentData()}"))
-        info_layout.addWidget(
-            QLabel(f"Точка: x={self.selected_point[0]}, y={self.selected_point[1]}")
-        )
+        info_layout.addWidget(QLabel(f"Точка: x={self.selected_point[0]}, y={self.selected_point[1]}"))
         map_button = QPushButton("Карта с ответом")
         map_button.clicked.connect(
             lambda: ResultMapDialog(
@@ -576,11 +546,7 @@ class EditorWindow(QDialog):
         frame = self.preview_photo.size()
         target_w = max(260, frame.width() - 16)
         target_h = max(240, frame.height() - 16)
-        self.preview_photo.setPixmap(
-            pixmap.scaled(
-                target_w, target_h, Qt.KeepAspectRatio, Qt.SmoothTransformation
-            )
-        )
+        self.preview_photo.setPixmap(pixmap.scaled(target_w, target_h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def _toggle_fullscreen(self) -> None:
         if self.isFullScreen():

@@ -9,9 +9,7 @@ from app.paths import PROJECT_ROOT
 LOGO_PATH = PROJECT_ROOT / "data" / "icons" / "navigator_icon.svg"
 
 
-def make_pin_pixmap(
-    color: str = "#176ed2", width: int = 30, height: int = 40
-) -> QPixmap:
+def make_pin_pixmap(color: str = "#176ed2", width: int = 30, height: int = 40) -> QPixmap:
     pixmap = QPixmap(width, height)
     pixmap.fill(Qt.transparent)
 

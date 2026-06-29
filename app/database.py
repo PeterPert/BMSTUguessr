@@ -97,15 +97,8 @@ def initialize_db() -> None:
 
 
 def _drop_legacy_tables(conn: sqlite3.Connection) -> None:
-    existing = {
-        row[0]
-        for row in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        ).fetchall()
-    }
-    legacy_tables = [
-        name for name in ("game_rounds", "game_results", "users") if name in existing
-    ]
+    existing = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+    legacy_tables = [name for name in ("game_rounds", "game_results", "users") if name in existing]
     if not legacy_tables:
         return
     conn.execute("PRAGMA foreign_keys = OFF")
@@ -152,9 +145,7 @@ def _seed_default_admins(conn: sqlite3.Connection) -> None:
 # ----- Администраторы -----
 
 
-def authenticate_admin(
-    username: str, password: str
-) -> tuple[bool, str, dict[str, Any] | None]:
+def authenticate_admin(username: str, password: str) -> tuple[bool, str, dict[str, Any] | None]:
     username = username.strip()
     with connect() as conn:
         row = conn.execute(
@@ -179,15 +170,11 @@ def authenticate_admin(
                     None,
                 )
 
-        if not verify_password(
-            password, admin["password_hash"], admin["password_salt"]
-        ):
+        if not verify_password(password, admin["password_hash"], admin["password_salt"]):
             failed = int(admin["failed_attempts"] or 0) + 1
             locked_value = None
             if failed >= LOCK_AFTER_ATTEMPTS:
-                locked_value = (
-                    datetime.now() + timedelta(seconds=LOCK_SECONDS)
-                ).isoformat(timespec="seconds")
+                locked_value = (datetime.now() + timedelta(seconds=LOCK_SECONDS)).isoformat(timespec="seconds")
                 failed = 0
             conn.execute(
                 "UPDATE admins SET failed_attempts = ?, locked_until = ? WHERE id = ?",
@@ -323,9 +310,7 @@ def delete_location(location_id: int) -> None:
 # ----- Результаты последней игры / история -----
 
 
-def save_game_result(
-    score: int, rounds: list[dict[str, Any]], max_score: int = 30
-) -> int:
+def save_game_result(score: int, rounds: list[dict[str, Any]], max_score: int = 30) -> int:
     with connect() as conn:
         cur = conn.execute(
             "INSERT INTO game_sessions(score, max_score) VALUES (?, ?)",

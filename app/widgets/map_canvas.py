@@ -13,9 +13,7 @@ from app.theme import get_colors
 Marker = tuple[int, int, QColor | str, str]
 
 
-def _draw_pin_marker(
-    painter: QPainter, x: int, y: int, color: QColor, label: str = ""
-) -> None:
+def _draw_pin_marker(painter: QPainter, x: int, y: int, color: QColor, label: str = "") -> None:
     """
     Рисует маркер в стиле гео-пина.
     Координата (x, y) находится ровно в кончике маркера.
@@ -124,9 +122,7 @@ class MapCanvas(QLabel):
 
     def _apply_frame_style(self) -> None:
         c = get_colors()
-        self.setStyleSheet(
-            f"background: {c.map_frame_background}; border: 1px solid {c.map_frame_border};"
-        )
+        self.setStyleSheet(f"background: {c.map_frame_background}; border: 1px solid {c.map_frame_border};")
 
     def load_map(self, path: str | Path) -> None:
         pixmap = QPixmap(str(path))
@@ -135,9 +131,7 @@ class MapCanvas(QLabel):
             placeholder.fill(QColor(get_colors().placeholder))
             pixmap = placeholder
         if pixmap.width() != MAP_SIZE[0] or pixmap.height() != MAP_SIZE[1]:
-            pixmap = pixmap.scaled(
-                *MAP_SIZE, Qt.IgnoreAspectRatio, Qt.SmoothTransformation
-            )
+            pixmap = pixmap.scaled(*MAP_SIZE, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
         self.base_pixmap = pixmap
         self._redraw()
 
@@ -145,9 +139,7 @@ class MapCanvas(QLabel):
         self.markers = list(markers)
         self._redraw()
 
-    def set_lines(
-        self, lines: Iterable[tuple[int, int, int, int, QColor | str]]
-    ) -> None:
+    def set_lines(self, lines: Iterable[tuple[int, int, int, int, QColor | str]]) -> None:
         self.lines = list(lines)
         self._redraw()
 
@@ -204,6 +196,4 @@ def build_scaled_result_pixmap(
         fallback = QPixmap(*MAP_SIZE)
         fallback.fill(QColor(get_colors().placeholder))
         pixmap = fallback
-    return pixmap.scaled(
-        max_width, max_height, Qt.KeepAspectRatio, Qt.SmoothTransformation
-    )
+    return pixmap.scaled(max_width, max_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)

@@ -55,9 +55,7 @@ class AdminLoginDialog(QDialog):
         self.password_edit.returnPressed.connect(self._login)
 
     def _login(self) -> None:
-        ok, message, admin = database.authenticate_admin(
-            self.username_edit.text(), self.password_edit.text()
-        )
+        ok, message, admin = database.authenticate_admin(self.username_edit.text(), self.password_edit.text())
         if not ok:
             QMessageBox.warning(self, "Вход", message)
             return

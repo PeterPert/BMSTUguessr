@@ -235,9 +235,7 @@ QPushButton#GameNextButton:hover {{
 """
 
 
-def apply_theme(
-    app: QApplication | None = None, colors: ThemeColors | None = None
-) -> None:
+def apply_theme(app: QApplication | None = None, colors: ThemeColors | None = None) -> None:
     stylesheet = build_stylesheet(colors)
     target = app or QApplication.instance()
     if target is not None:
