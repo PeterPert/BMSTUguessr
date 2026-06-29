@@ -15,7 +15,7 @@ WORKDIR /app
 
 # Системные библиотеки, необходимые для Qt6 / PySide6
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libgl1-mesa-glx \
+        libgl1 \
         libegl1 \
         libglib2.0-0 \
         libfontconfig1 \
