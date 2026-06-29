@@ -17,6 +17,7 @@ class RulesDialog(QDialog):
 
         # Горячая клавиша F11
         from PySide6.QtGui import QKeySequence, QShortcut
+
         self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
         self.fs_shortcut.activated.connect(self._toggle_fullscreen)
 
@@ -31,8 +32,7 @@ class RulesDialog(QDialog):
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(22, 20, 22, 20)
 
-        text = QLabel(
-            """
+        text = QLabel("""
             <p><b>Раундов:</b> 6</p>
             <p><b>Максимум:</b> 30 очков</p>
             <p><b>Как играть:</b> по фотографии выбрать этаж и поставить точку на карте.</p>
@@ -47,8 +47,7 @@ class RulesDialog(QDialog):
                 <li>меньше 40 м: 1 очко;</li>
                 <li>40 м и больше: 0 очков.</li>
             </ul>
-            """
-        )
+            """)
         text.setWordWrap(True)
         text.setAlignment(Qt.AlignTop)
         card_layout.addWidget(text)

@@ -13,7 +13,12 @@ from app.widgets.map_canvas import MapCanvas, Marker
 class MapPickerDialog(QDialog):
     point_selected = Signal(int, int)
 
-    def __init__(self, map_path: str | Path, parent=None, existing_marker: tuple[int, int] | None = None) -> None:
+    def __init__(
+        self,
+        map_path: str | Path,
+        parent=None,
+        existing_marker: tuple[int, int] | None = None,
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("BMSTUguessr")
         self.setFixedSize(1100, 700)
@@ -23,7 +28,16 @@ class MapPickerDialog(QDialog):
         self.canvas = MapCanvas(clickable=True)
         self.canvas.load_map(map_path)
         if existing_marker is not None:
-            self.canvas.set_markers([(existing_marker[0], existing_marker[1], QColor(get_colors().marker_guess), "")])
+            self.canvas.set_markers(
+                [
+                    (
+                        existing_marker[0],
+                        existing_marker[1],
+                        QColor(get_colors().marker_guess),
+                        "",
+                    )
+                ]
+            )
         layout.addWidget(self.canvas)
         self.canvas.clicked.connect(self._select_point)
 

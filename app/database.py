@@ -34,8 +34,7 @@ def initialize_db() -> None:
     paths.ensure_dirs()
     with connect() as conn:
         _drop_legacy_tables(conn)
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE IF NOT EXISTS admins (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE,
@@ -91,8 +90,7 @@ def initialize_db() -> None:
                 FOREIGN KEY(session_id) REFERENCES game_sessions(id)
                     ON UPDATE CASCADE ON DELETE CASCADE
             );
-            """
-        )
+            """)
         _insert_default_floors(conn)
         _seed_default_admins(conn)
         conn.commit()
@@ -105,7 +103,9 @@ def _drop_legacy_tables(conn: sqlite3.Connection) -> None:
             "SELECT name FROM sqlite_master WHERE type='table'"
         ).fetchall()
     }
-    legacy_tables = [name for name in ("game_rounds", "game_results", "users") if name in existing]
+    legacy_tables = [
+        name for name in ("game_rounds", "game_results", "users") if name in existing
+    ]
     if not legacy_tables:
         return
     conn.execute("PRAGMA foreign_keys = OFF")
@@ -151,7 +151,10 @@ def _seed_default_admins(conn: sqlite3.Connection) -> None:
 
 # ----- Администраторы -----
 
-def authenticate_admin(username: str, password: str) -> tuple[bool, str, dict[str, Any] | None]:
+
+def authenticate_admin(
+    username: str, password: str
+) -> tuple[bool, str, dict[str, Any] | None]:
     username = username.strip()
     with connect() as conn:
         row = conn.execute(
@@ -170,13 +173,21 @@ def authenticate_admin(username: str, password: str) -> tuple[bool, str, dict[st
                 unlock_time = datetime.min
             if unlock_time > datetime.now():
                 left = int((unlock_time - datetime.now()).total_seconds()) + 1
-                return False, f"Слишком много попыток. Повторите через {left} сек.", None
+                return (
+                    False,
+                    f"Слишком много попыток. Повторите через {left} сек.",
+                    None,
+                )
 
-        if not verify_password(password, admin["password_hash"], admin["password_salt"]):
+        if not verify_password(
+            password, admin["password_hash"], admin["password_salt"]
+        ):
             failed = int(admin["failed_attempts"] or 0) + 1
             locked_value = None
             if failed >= LOCK_AFTER_ATTEMPTS:
-                locked_value = (datetime.now() + timedelta(seconds=LOCK_SECONDS)).isoformat(timespec="seconds")
+                locked_value = (
+                    datetime.now() + timedelta(seconds=LOCK_SECONDS)
+                ).isoformat(timespec="seconds")
                 failed = 0
             conn.execute(
                 "UPDATE admins SET failed_attempts = ?, locked_until = ? WHERE id = ?",
@@ -190,10 +201,15 @@ def authenticate_admin(username: str, password: str) -> tuple[bool, str, dict[st
             (admin["id"],),
         )
         conn.commit()
-        return True, "Вход выполнен.", {"id": admin["id"], "username": admin["username"]}
+        return (
+            True,
+            "Вход выполнен.",
+            {"id": admin["id"], "username": admin["username"]},
+        )
 
 
 # ----- Этажи -----
+
 
 def get_floors(place: str = "gz") -> list[dict[str, Any]]:
     with connect() as conn:
@@ -234,6 +250,7 @@ def upsert_floor(
 
 
 # ----- Метки / локации -----
+
 
 def get_locations(place: str = "gz") -> list[dict[str, Any]]:
     with connect() as conn:
@@ -305,7 +322,10 @@ def delete_location(location_id: int) -> None:
 
 # ----- Результаты последней игры / история -----
 
-def save_game_result(score: int, rounds: list[dict[str, Any]], max_score: int = 30) -> int:
+
+def save_game_result(
+    score: int, rounds: list[dict[str, Any]], max_score: int = 30
+) -> int:
     with connect() as conn:
         cur = conn.execute(
             "INSERT INTO game_sessions(score, max_score) VALUES (?, ?)",

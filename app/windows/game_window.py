@@ -20,7 +20,11 @@ from PySide6.QtWidgets import (
 )
 
 from app import database, paths
-from app.scoring import FLOOR_PENALTY_METERS, calculate_distance_meters, points_for_distance
+from app.scoring import (
+    FLOOR_PENALTY_METERS,
+    calculate_distance_meters,
+    points_for_distance,
+)
 from app.theme import get_colors
 from app.widgets.map_canvas import build_scaled_result_pixmap
 from app.widgets.logo_header import build_logo_header, make_logo_pixmap
@@ -161,8 +165,7 @@ class FinalScoreDialog(QDialog):
         self.setWindowTitle("BMSTUguessr")
         self.setMinimumSize(520, 360)
 
-        self.setStyleSheet(
-            """
+        self.setStyleSheet("""
             QDialog {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:1,
@@ -170,8 +173,7 @@ class FinalScoreDialog(QDialog):
                     stop:1 #c9eafc
                 );
             }
-            """
-        )
+            """)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(30, 30, 30, 30)
@@ -181,15 +183,13 @@ class FinalScoreDialog(QDialog):
 
         card = QWidget()
         card.setObjectName("FinalCard")
-        card.setStyleSheet(
-            """
+        card.setStyleSheet("""
             QWidget#FinalCard {
                 background: rgba(255, 255, 255, 0.94);
                 border: 1px solid #a8d3f1;
                 border-radius: 24px;
             }
-            """
-        )
+            """)
 
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(28, 26, 28, 26)
@@ -197,20 +197,17 @@ class FinalScoreDialog(QDialog):
 
         subtitle = QLabel("Игра завершена")
         subtitle.setAlignment(Qt.AlignCenter)
-        subtitle.setStyleSheet(
-            """
+        subtitle.setStyleSheet("""
             QLabel {
                 color: #355f82;
                 font-size: 18px;
                 font-weight: 800;
             }
-            """
-        )
+            """)
 
         score_label = QLabel(f"{score} / {max_score}")
         score_label.setAlignment(Qt.AlignCenter)
-        score_label.setStyleSheet(
-            """
+        score_label.setStyleSheet("""
             QLabel {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:1,
@@ -224,13 +221,11 @@ class FinalScoreDialog(QDialog):
                 font-weight: 900;
                 padding: 26px;
             }
-            """
-        )
+            """)
 
         menu_button = QPushButton("В главное меню")
         menu_button.setMinimumHeight(52)
-        menu_button.setStyleSheet(
-            """
+        menu_button.setStyleSheet("""
             QPushButton {
                 background: #0b8fd8;
                 color: white;
@@ -243,8 +238,7 @@ class FinalScoreDialog(QDialog):
             QPushButton:hover {
                 background: #0878b8;
             }
-            """
-        )
+            """)
         menu_button.clicked.connect(self.accept)
 
         card_layout.addWidget(subtitle)
@@ -268,6 +262,7 @@ class GameWindow(QDialog):
 
         # Горячая клавиша F11 для перехода в полноэкранный режим
         from PySide6.QtGui import QKeySequence, QShortcut
+
         self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
         self.fs_shortcut.activated.connect(self._toggle_fullscreen)
 
@@ -294,8 +289,7 @@ class GameWindow(QDialog):
         widget.setGraphicsEffect(shadow)
 
     def _build_ui(self) -> None:
-        self.setStyleSheet(
-            """
+        self.setStyleSheet("""
             QDialog {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:1,
@@ -303,8 +297,7 @@ class GameWindow(QDialog):
                     stop:1 #bfe7fb
                 );
             }
-            """
-        )
+            """)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 18, 20, 20)
@@ -341,15 +334,13 @@ class GameWindow(QDialog):
     def _build_header(self) -> QWidget:
         header = QWidget()
         header.setObjectName("HeaderCard")
-        header.setStyleSheet(
-            """
+        header.setStyleSheet("""
             QWidget#HeaderCard {
                 background: rgba(255, 255, 255, 0.62);
                 border: 1px solid #c8e4f7;
                 border-radius: 22px;
             }
-            """
-        )
+            """)
         self._apply_soft_shadow(header)
 
         layout = QHBoxLayout(header)
@@ -366,8 +357,7 @@ class GameWindow(QDialog):
         pin_icon.setStyleSheet("background: transparent; border: none;")
 
         self.brand_title = QLabel("BMSTUguessr")
-        self.brand_title.setStyleSheet(
-            """
+        self.brand_title.setStyleSheet("""
             QLabel {
                 color: #0b3b66;
                 font-size: 32px;
@@ -375,8 +365,7 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         brand_row.addWidget(pin_icon)
         brand_row.addWidget(self.brand_title)
@@ -384,8 +373,7 @@ class GameWindow(QDialog):
         self.round_title = QLabel("Раунд 1 из 6")
         self.round_title.setAlignment(Qt.AlignCenter)
         self.round_title.setMinimumWidth(168)
-        self.round_title.setStyleSheet(
-            """
+        self.round_title.setStyleSheet("""
             QLabel {
                 background: rgba(255, 255, 255, 0.88);
                 border: 1px solid #bdddf4;
@@ -395,14 +383,12 @@ class GameWindow(QDialog):
                 font-weight: 900;
                 padding: 10px 18px;
             }
-            """
-        )
+            """)
 
         self.score_label = QLabel("0 / 30")
         self.score_label.setAlignment(Qt.AlignCenter)
         self.score_label.setMinimumWidth(150)
-        self.score_label.setStyleSheet(
-            """
+        self.score_label.setStyleSheet("""
             QLabel {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:1,
@@ -416,8 +402,7 @@ class GameWindow(QDialog):
                 font-weight: 900;
                 padding: 10px 22px;
             }
-            """
-        )
+            """)
 
         layout.addLayout(brand_row, 1)
         layout.addStretch(1)
@@ -430,15 +415,13 @@ class GameWindow(QDialog):
     def _build_left_card(self) -> QWidget:
         left_card = QWidget()
         left_card.setObjectName("MapCard")
-        left_card.setStyleSheet(
-            """
+        left_card.setStyleSheet("""
             QWidget#MapCard {
                 background: rgba(255, 255, 255, 0.90);
                 border: 1px solid #a9d4f1;
                 border-radius: 22px;
             }
-            """
-        )
+            """)
         self._apply_soft_shadow(left_card)
 
         layout = QVBoxLayout(left_card)
@@ -449,16 +432,14 @@ class GameWindow(QDialog):
         self.main_visual.setAlignment(Qt.AlignCenter)
         self.main_visual.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.main_visual.setMinimumSize(760, 560)
-        self.main_visual.setStyleSheet(
-            """
+        self.main_visual.setStyleSheet("""
             QLabel {
                 background: #f9fcff;
                 border: 1px solid #d6eaf8;
                 border-radius: 18px;
                 padding: 8px;
             }
-            """
-        )
+            """)
 
         layout.addWidget(self.main_visual, 1)
         return left_card
@@ -468,15 +449,13 @@ class GameWindow(QDialog):
         card.setObjectName("PlayCard")
         card.setMinimumWidth(360)
         card.setMaximumWidth(395)
-        card.setStyleSheet(
-            """
+        card.setStyleSheet("""
             QWidget#PlayCard {
                 background: rgba(255, 255, 255, 0.94);
                 border: 1px solid #aad4f1;
                 border-radius: 20px;
             }
-            """
-        )
+            """)
         self._apply_soft_shadow(card)
 
         layout = QVBoxLayout(card)
@@ -484,8 +463,7 @@ class GameWindow(QDialog):
         layout.setSpacing(16)
 
         title = QLabel("Ваш ход")
-        title.setStyleSheet(
-            """
+        title.setStyleSheet("""
             QLabel {
                 color: #0f3253;
                 font-size: 20px;
@@ -493,14 +471,12 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         status_label = QLabel("Выберите этаж")
         status_label.setAlignment(Qt.AlignCenter)
         status_label.setMinimumHeight(72)
-        status_label.setStyleSheet(
-            """
+        status_label.setStyleSheet("""
             QLabel {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:1,
@@ -513,30 +489,25 @@ class GameWindow(QDialog):
                 font-size: 22px;
                 font-weight: 900;
             }
-            """
-        )
+            """)
 
         line = QWidget()
         line.setFixedHeight(1)
-        line.setStyleSheet(
-            """
+        line.setStyleSheet("""
             QWidget {
                 background: #dcecf8;
                 border: none;
             }
-            """
-        )
+            """)
 
         details_card = QWidget()
         details_card.setObjectName("MoveDetailsCard")
-        details_card.setStyleSheet(
-            """
+        details_card.setStyleSheet("""
             QWidget#MoveDetailsCard {
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         details_layout = QVBoxLayout(details_card)
         details_layout.setContentsMargins(0, 0, 0, 0)
@@ -555,8 +526,7 @@ class GameWindow(QDialog):
         icon_label.setStyleSheet("background: transparent; border: none;")
 
         floor_label = QLabel("Этаж:")
-        floor_label.setStyleSheet(
-            """
+        floor_label.setStyleSheet("""
             QLabel {
                 color: #2d4056;
                 font-size: 15px;
@@ -564,8 +534,7 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         floor_layout.addWidget(icon_label)
         floor_layout.addWidget(floor_label)
@@ -573,8 +542,7 @@ class GameWindow(QDialog):
 
         self.floor_combo = QComboBox()
         self.floor_combo.setMinimumHeight(50)
-        self.floor_combo.setStyleSheet(
-            """
+        self.floor_combo.setStyleSheet("""
             QComboBox {
                 background: rgba(255, 255, 255, 0.98);
                 border: 1px solid #8ec7ec;
@@ -591,16 +559,14 @@ class GameWindow(QDialog):
                 border: none;
                 width: 34px;
             }
-            """
-        )
+            """)
 
         details_layout.addWidget(floor_row)
         details_layout.addWidget(self.floor_combo)
 
         self.map_button = QPushButton("Открыть карту  →")
         self.map_button.setMinimumHeight(56)
-        self.map_button.setStyleSheet(
-            """
+        self.map_button.setStyleSheet("""
             QPushButton {
                 background: #1493db;
                 color: white;
@@ -616,8 +582,7 @@ class GameWindow(QDialog):
             QPushButton:disabled {
                 background: #8fc6e8;
             }
-            """
-        )
+            """)
 
         layout.addWidget(title)
         layout.addWidget(status_label)
@@ -632,15 +597,13 @@ class GameWindow(QDialog):
         card.setObjectName("ResultCard")
         card.setMinimumWidth(360)
         card.setMaximumWidth(395)
-        card.setStyleSheet(
-            """
+        card.setStyleSheet("""
             QWidget#ResultCard {
                 background: rgba(255, 255, 255, 0.94);
                 border: 1px solid #aad4f1;
                 border-radius: 20px;
             }
-            """
-        )
+            """)
         self._apply_soft_shadow(card)
 
         layout = QVBoxLayout(card)
@@ -648,8 +611,7 @@ class GameWindow(QDialog):
         layout.setSpacing(16)
 
         self.result_title = QLabel("Результат раунда")
-        self.result_title.setStyleSheet(
-            """
+        self.result_title.setStyleSheet("""
             QLabel {
                 color: #0f3253;
                 font-size: 20px;
@@ -657,14 +619,12 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         self.round_points_label = QLabel("+0")
         self.round_points_label.setAlignment(Qt.AlignCenter)
         self.round_points_label.setMinimumHeight(88)
-        self.round_points_label.setStyleSheet(
-            """
+        self.round_points_label.setStyleSheet("""
             QLabel {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:1,
@@ -677,18 +637,15 @@ class GameWindow(QDialog):
                 font-size: 38px;
                 font-weight: 900;
             }
-            """
-        )
+            """)
 
         legend = QWidget()
-        legend.setStyleSheet(
-            """
+        legend.setStyleSheet("""
             QWidget {
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         legend_layout = QHBoxLayout(legend)
         legend_layout.setContentsMargins(0, 0, 0, 0)
@@ -701,8 +658,7 @@ class GameWindow(QDialog):
         guess_pin.setStyleSheet("background: transparent; border: none;")
 
         guess_text = QLabel("Ваш ответ")
-        guess_text.setStyleSheet(
-            """
+        guess_text.setStyleSheet("""
             QLabel {
                 color: #23384f;
                 font-size: 15px;
@@ -710,8 +666,7 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         correct_pin = QLabel()
         correct_pin.setPixmap(make_pin_pixmap("#22a447", 22, 30))
@@ -719,8 +674,7 @@ class GameWindow(QDialog):
         correct_pin.setStyleSheet("background: transparent; border: none;")
 
         correct_text = QLabel("Правильное место")
-        correct_text.setStyleSheet(
-            """
+        correct_text.setStyleSheet("""
             QLabel {
                 color: #23384f;
                 font-size: 15px;
@@ -728,8 +682,7 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         legend_layout.addWidget(guess_pin)
         legend_layout.addWidget(guess_text)
@@ -739,25 +692,21 @@ class GameWindow(QDialog):
 
         line = QWidget()
         line.setFixedHeight(1)
-        line.setStyleSheet(
-            """
+        line.setStyleSheet("""
             QWidget {
                 background: #dcecf8;
                 border: none;
             }
-            """
-        )
+            """)
 
         details_card = QWidget()
         details_card.setObjectName("DetailsCard")
-        details_card.setStyleSheet(
-            """
+        details_card.setStyleSheet("""
             QWidget#DetailsCard {
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         details_layout = QVBoxLayout(details_card)
         details_layout.setContentsMargins(0, 0, 0, 0)
@@ -772,7 +721,9 @@ class GameWindow(QDialog):
             self._make_result_row("guess_floor", "Ваш этаж:", self.guessed_floor_value)
         )
         details_layout.addWidget(
-            self._make_result_row("correct_floor", "Правильный этаж:", self.correct_floor_value)
+            self._make_result_row(
+                "correct_floor", "Правильный этаж:", self.correct_floor_value
+            )
         )
         details_layout.addWidget(
             self._make_result_row("distance", "Расстояние:", self.distance_value)
@@ -783,8 +734,7 @@ class GameWindow(QDialog):
 
         self.open_full_result_button = QPushButton("⛶  Карта на весь экран")
         self.open_full_result_button.setMinimumHeight(50)
-        self.open_full_result_button.setStyleSheet(
-            """
+        self.open_full_result_button.setStyleSheet("""
             QPushButton {
                 background: rgba(255, 255, 255, 0.96);
                 color: #0d5f96;
@@ -797,13 +747,11 @@ class GameWindow(QDialog):
             QPushButton:hover {
                 background: #eef8ff;
             }
-            """
-        )
+            """)
 
         self.next_button = QPushButton("Следующий раунд  →")
         self.next_button.setMinimumHeight(56)
-        self.next_button.setStyleSheet(
-            """
+        self.next_button.setStyleSheet("""
             QPushButton {
                 background: #1493db;
                 color: white;
@@ -816,8 +764,7 @@ class GameWindow(QDialog):
             QPushButton:hover {
                 background: #0d7ec0;
             }
-            """
-        )
+            """)
 
         layout.addWidget(self.result_title)
         layout.addWidget(self.round_points_label)
@@ -830,16 +777,16 @@ class GameWindow(QDialog):
         card.hide()
         return card
 
-    def _make_result_row(self, icon_kind: str, title: str, value_label: QLabel) -> QWidget:
+    def _make_result_row(
+        self, icon_kind: str, title: str, value_label: QLabel
+    ) -> QWidget:
         row = QWidget()
-        row.setStyleSheet(
-            """
+        row.setStyleSheet("""
             QWidget {
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         layout = QHBoxLayout(row)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -849,18 +796,15 @@ class GameWindow(QDialog):
         icon_label.setFixedSize(32, 32)
         icon_label.setAlignment(Qt.AlignCenter)
         icon_label.setPixmap(make_stat_icon(icon_kind, 30))
-        icon_label.setStyleSheet(
-            """
+        icon_label.setStyleSheet("""
             QLabel {
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         title_label = QLabel(title)
-        title_label.setStyleSheet(
-            """
+        title_label.setStyleSheet("""
             QLabel {
                 color: #2d4056;
                 font-size: 15px;
@@ -868,12 +812,10 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        value_label.setStyleSheet(
-            """
+        value_label.setStyleSheet("""
             QLabel {
                 color: #102b5c;
                 font-size: 15px;
@@ -881,8 +823,7 @@ class GameWindow(QDialog):
                 background: transparent;
                 border: none;
             }
-            """
-        )
+            """)
 
         layout.addWidget(icon_label)
         layout.addWidget(title_label)
@@ -1023,7 +964,9 @@ class GameWindow(QDialog):
 
         floor = database.get_floor(int(guessed_floor))
         if floor is None:
-            QMessageBox.warning(self, "BMSTUguessr", "Схема выбранного этажа не найдена.")
+            QMessageBox.warning(
+                self, "BMSTUguessr", "Схема выбранного этажа не найдена."
+            )
             return
 
         dialog = MapPickerDialog(paths.resolve_path(floor["map_path"]), self)
@@ -1035,7 +978,9 @@ class GameWindow(QDialog):
                 dialog.selected_point[1],
             )
 
-    def _process_guess(self, guessed_floor: int, guessed_x: int, guessed_y: int) -> None:
+    def _process_guess(
+        self, guessed_floor: int, guessed_x: int, guessed_y: int
+    ) -> None:
         location = self.round_locations[self.round_index]
 
         correct_floor = int(location["floor"])
@@ -1157,4 +1102,4 @@ class GameWindow(QDialog):
         if self.isFullScreen():
             self.showNormal()
         else:
-            self.showFullScreen()
+            self.showFullScreen()

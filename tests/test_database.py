@@ -21,7 +21,13 @@ class TestDatabaseInit:
         }
         conn.close()
 
-        expected = {"admins", "floors", "locations", "game_sessions", "game_session_rounds"}
+        expected = {
+            "admins",
+            "floors",
+            "locations",
+            "game_sessions",
+            "game_session_rounds",
+        }
         assert expected.issubset(tables)
 
     def test_default_admins_seeded(self, tmp_db):

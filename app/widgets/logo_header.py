@@ -6,11 +6,12 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from app.paths import PROJECT_ROOT
 
-
 LOGO_PATH = PROJECT_ROOT / "data" / "icons" / "navigator_icon.svg"
 
 
-def make_pin_pixmap(color: str = "#176ed2", width: int = 30, height: int = 40) -> QPixmap:
+def make_pin_pixmap(
+    color: str = "#176ed2", width: int = 30, height: int = 40
+) -> QPixmap:
     pixmap = QPixmap(width, height)
     pixmap.fill(Qt.transparent)
 
@@ -68,14 +69,12 @@ def build_logo_header(
     vertical: bool = True,
 ) -> QWidget:
     widget = QWidget()
-    widget.setStyleSheet(
-        """
+    widget.setStyleSheet("""
         QWidget {
             background: transparent;
             border: none;
         }
-        """
-    )
+        """)
 
     if vertical:
         layout = QVBoxLayout(widget)
@@ -90,19 +89,16 @@ def build_logo_header(
     icon_label.setPixmap(make_logo_pixmap(icon_size))
     icon_label.setFixedSize(icon_size + 8, icon_size + 8)
     icon_label.setAlignment(Qt.AlignCenter)
-    icon_label.setStyleSheet(
-        """
+    icon_label.setStyleSheet("""
         QLabel {
             background: transparent;
             border: none;
         }
-        """
-    )
+        """)
 
     title_label = QLabel("BMSTUguessr")
     title_label.setAlignment(Qt.AlignCenter)
-    title_label.setStyleSheet(
-        f"""
+    title_label.setStyleSheet(f"""
         QLabel {{
             color: #0b3b66;
             font-size: {title_size}px;
@@ -110,8 +106,7 @@ def build_logo_header(
             background: transparent;
             border: none;
         }}
-        """
-    )
+        """)
 
     layout.addWidget(icon_label, 0, Qt.AlignCenter)
     layout.addWidget(title_label, 0, Qt.AlignCenter)

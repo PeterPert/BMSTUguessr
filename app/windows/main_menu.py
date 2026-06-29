@@ -19,6 +19,7 @@ class MainMenuWindow(QMainWindow):
 
         # Горячая клавиша F11 для перехода в полноэкранный режим
         from PySide6.QtGui import QKeySequence, QShortcut
+
         self.fs_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
         self.fs_shortcut.activated.connect(self._toggle_fullscreen)
 
